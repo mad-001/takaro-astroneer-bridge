@@ -22,10 +22,25 @@ Takaro Platform (WebSocket)
 
 The bridge connects to your Astroneer server's RCON interface and forwards events/commands between Astroneer and Takaro.
 
+## What You Need (and DON'T Need)
+
+### ✅ Required:
+1. **Astroneer Dedicated Server** - Fresh vanilla install (no mods!)
+2. **Node.js 18+** - For running the bridge
+3. **Takaro Account** - Get registration token from dashboard
+
+### ❌ NOT Required:
+- ❌ UE4SS - Not needed!
+- ❌ Lua mods - Not needed!
+- ❌ Game modifications - Not needed!
+- ❌ .pak mods - Not needed!
+
+**RCON is built into Astroneer's dedicated server** - no modifications required!
+
 ## Prerequisites
 
-- Node.js 18+
-- Astroneer Dedicated Server with RCON enabled
+- Node.js 18+ (download from nodejs.org)
+- Astroneer Dedicated Server (vanilla install)
 - Takaro account with game server registration
 
 ## Installation
@@ -81,6 +96,82 @@ The bridge will:
 1. Connect to Takaro's WebSocket server
 2. Connect to your Astroneer server's RCON interface
 3. Begin forwarding player events and processing commands
+
+---
+
+## Fresh Install Guide (Starting from Scratch)
+
+If you want to start completely fresh and remove any previous mods/modifications:
+
+### On Your Astroneer Server Machine:
+
+**Step 1: Clean Astroneer Installation**
+```cmd
+# You can safely delete and reinstall Astroneer server
+# OR just remove any UE4SS/mod files if they exist:
+# - Delete any UE4SS folders
+# - Delete any .pak mods from Astro/Content/Paks/
+# Keep your save files in Astro/Saved/SaveGames/
+```
+
+**Step 2: Configure RCON** (Only change needed!)
+```cmd
+# Edit: Astro/Saved/Config/WindowsServer/AstroServerSettings.ini
+# Add these lines:
+
+[/Script/Astro.AstroServerSettings]
+ConsolePort=5000
+ConsolePassword=your-secure-password
+```
+
+**Step 3: Restart Astroneer Server**
+```cmd
+# Restart your Astroneer dedicated server
+# RCON is now enabled - that's it for the game server!
+```
+
+**Step 4: Install Bridge (Separate Location)**
+```cmd
+# Download bridge to a different folder (not in Astroneer directory)
+cd C:\TakaroBridge  # or any location you prefer
+git clone https://github.com/mad-001/takaro-astroneer-bridge.git
+cd takaro-astroneer-bridge
+npm install
+npm run build
+```
+
+**Step 5: Configure Bridge**
+```cmd
+# Create .env file with:
+IDENTITY_TOKEN=your-server-name
+REGISTRATION_TOKEN=your-takaro-token
+RCON_HOST=127.0.0.1
+RCON_PORT=5000
+RCON_PASSWORD=your-secure-password
+```
+
+**Step 6: Start Bridge**
+```cmd
+node dist/index.js
+```
+
+**Done!** No game mods, no UE4SS, no complications. Just RCON + Bridge.
+
+### File Locations Summary:
+```
+C:\AstroneerServer\
+  └── Astro\
+      └── Saved\
+          └── Config\WindowsServer\
+              └── AstroServerSettings.ini  ← Only file you edit!
+
+C:\TakaroBridge\  (or anywhere else)
+  └── takaro-astroneer-bridge\
+      ├── dist\index.js  ← Bridge runs here
+      └── .env  ← Bridge config
+```
+
+---
 
 ## Verification
 
