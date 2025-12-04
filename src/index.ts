@@ -40,6 +40,17 @@ let reconnectAttempts = 0;
 const MAX_RECONNECT_DELAY = 60000; // 60 seconds
 const BASE_RECONNECT_DELAY = 3000; // 3 seconds
 
+// Metrics
+const metrics = {
+  requestsReceived: 0,
+  responsesSent: 0,
+  eventsReceived: 0,
+  eventsSent: 0,
+  errors: 0,
+  lastRequestTime: Date.now(),
+  startTime: Date.now()
+};
+
 /**
  * Connect to Takaro WebSocket server
  */
@@ -153,6 +164,9 @@ function handleIdentifyResponse(message: any) {
 async function handleTakaroRequest(message: any) {
   const { requestId, payload } = message;
   const { action, args } = payload;
+
+  metrics.requestsReceived++;
+  metrics.lastRequestTime = Date.now();
 
   logger.info(`Takaro request: ${action} (ID: ${requestId})`);
 
@@ -319,9 +333,17 @@ function sendToTakaro(message: any) {
   try {
     const jsonMessage = JSON.stringify(message);
     takaroWs.send(jsonMessage);
+
+    if (message.type === 'response') {
+      metrics.responsesSent++;
+    } else if (message.type === 'gameEvent') {
+      metrics.eventsSent++;
+    }
+
     logger.info(`Sent to Takaro: ${message.type} ${message.requestId ? '(ID: ' + message.requestId + ')' : ''}`);
     return true;
   } catch (error) {
+    metrics.errors++;
     logger.error(`Failed to send message to Takaro: ${error}`);
     return false;
   }
@@ -390,10 +412,20 @@ app.use(express.json());
  * Health check endpoint
  */
 app.get('/health', (req, res) => {
+  const uptime = Date.now() - metrics.startTime;
   res.json({
     status: 'ok',
     takaroConnected: isConnectedToTakaro,
-    uptime: process.uptime()
+    uptime: Math.floor(uptime / 1000),
+    metrics: {
+      requestsReceived: metrics.requestsReceived,
+      responsesSent: metrics.responsesSent,
+      eventsReceived: metrics.eventsReceived,
+      eventsSent: metrics.eventsSent,
+      errors: metrics.errors,
+      lastRequestTime: metrics.lastRequestTime,
+      requestRate: metrics.requestsReceived / (uptime / 1000 / 60) // requests per minute
+    }
   });
 });
 
@@ -406,15 +438,18 @@ app.post('/event', (req, res) => {
   const { type, data } = req.body;
 
   if (!type) {
+    metrics.errors++;
     return res.status(400).json({ error: 'Missing event type' });
   }
 
+  metrics.eventsReceived++;
   logger.info(`Received event from Lua: ${type}`);
 
   if (isConnectedToTakaro) {
     sendGameEvent(type, data || {});
     res.json({ success: true });
   } else {
+    metrics.errors++;
     logger.warn('Not connected to Takaro, event dropped');
     res.status(503).json({ error: 'Not connected to Takaro' });
   }
