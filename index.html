@@ -185,9 +185,9 @@
 
         <h2>📥 Download</h2>
         <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/latest/download/astroneer-bridge.zip" class="download-btn">
-            🌟 Download Latest Version (v1.6.5) 🌟
+            🌟 Download Latest Version (v1.6.6) 🌟
         </a>
-        <p><small>Released: December 4, 2025 | Size: 14 KB | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
+        <p><small>Released: December 4, 2025 | Size: ~15 KB | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
 
         <h2>⚡ Quick Start</h2>
         <ol>
@@ -239,6 +239,10 @@ RCON_PASSWORD=same-password-as-step-3</code></pre>
                 <p>Execute server commands through Takaro (kick, player list, etc.)</p>
             </div>
             <div class="feature">
+                <h3>🖥️ Interactive Console</h3>
+                <p>NEW! Direct RCON console for manual server administration and testing</p>
+            </div>
+            <div class="feature">
                 <h3>📊 Monitoring</h3>
                 <p>Built-in health endpoint with connection status and metrics</p>
             </div>
@@ -246,6 +250,24 @@ RCON_PASSWORD=same-password-as-step-3</code></pre>
 
         <h2>🔧 Configuration</h2>
         <p>The bridge uses a simple <code>TakaroConfig.txt</code> file for configuration. Get your tokens from the <a href="https://dashboard.takaro.io/gameservers/create" target="_blank">Takaro Dashboard</a>.</p>
+
+        <h2>🖥️ RCON Console (NEW!)</h2>
+        <p>The bridge now includes an interactive RCON console for direct server administration!</p>
+        <p><strong>To use:</strong> Double-click <code>rcon-console.bat</code> to open an interactive terminal.</p>
+        <p><strong>Example commands:</strong></p>
+        <pre><code>RCON> help                    # Show all available commands
+RCON> ListPlayers             # List all players
+RCON> DSServerStatistics      # Get detailed server stats
+RCON> SaveGame MyBackup       # Save the game
+RCON> exit                    # Close console</code></pre>
+        <p>The console connects directly to your Astroneer server via RCON, allowing you to:</p>
+        <ul>
+            <li>Manage players (kick, change roles)</li>
+            <li>Control save games (save, load, delete)</li>
+            <li>Configure server settings (password, whitelist, timeouts)</li>
+            <li>View server statistics in real-time</li>
+            <li>Test and debug RCON commands</li>
+        </ul>
 
         <h2>❓ Troubleshooting</h2>
         <ul>

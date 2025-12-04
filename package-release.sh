@@ -17,6 +17,8 @@ cp package.json "release/astroneer bridge/"
 cp TakaroConfig.txt "release/astroneer bridge/"
 cp start.bat "release/astroneer bridge/"
 cp stop.bat "release/astroneer bridge/"
+cp rcon-console.js "release/astroneer bridge/"
+cp rcon-console.bat "release/astroneer bridge/"
 cp QUICK_START.txt "release/astroneer bridge/"
 cp README.md "release/astroneer bridge/"
 
