@@ -22,26 +22,14 @@ Takaro Platform (WebSocket)
 
 The bridge connects to your Astroneer server's RCON interface and forwards events/commands between Astroneer and Takaro.
 
-## What You Need (and DON'T Need)
+## Requirements
 
-### ✅ Required:
-1. **Astroneer Dedicated Server** - Fresh vanilla install (no mods!)
-2. **Node.js 18+** - For running the bridge
-3. **Takaro Account** - Get registration token from dashboard
+**This integration requires NO game modifications.** RCON is built into Astroneer's dedicated server.
 
-### ❌ NOT Required:
-- ❌ UE4SS - Not needed!
-- ❌ Lua mods - Not needed!
-- ❌ Game modifications - Not needed!
-- ❌ .pak mods - Not needed!
-
-**RCON is built into Astroneer's dedicated server** - no modifications required!
-
-## Prerequisites
-
-- Node.js 18+ (download from nodejs.org)
-- Astroneer Dedicated Server (vanilla install)
-- Takaro account with game server registration
+You need:
+- Astroneer Dedicated Server (vanilla, no mods)
+- Node.js 18+ (for the bridge server)
+- Takaro account
 
 ## Installation
 
