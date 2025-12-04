@@ -227,9 +227,9 @@ async function handleTakaroRequest(message: any) {
         try {
           const players = await rconClient.listPlayers();
           responsePayload = players.map((p: any) => ({
-            gameId: String(p.playerGuid),
-            name: String(p.playerName),
-            platformId: `astroneer:${p.playerGuid}`,
+            gameId: String(p.guid),
+            name: String(p.name),
+            platformId: `astroneer:${p.guid}`,
             steamId: '',
             ip: '',
             ping: 0
@@ -502,14 +502,14 @@ function connectToRcon() {
 
     // Player events
     rconClient.on('playerjoin', (player: any) => {
-      logger.info(`Player joined: ${player.playerName} (${player.playerGuid})`);
+      logger.info(`Player joined: ${player.name} (${player.guid})`);
 
       if (isConnectedToTakaro) {
         sendGameEvent('player-connected', {
           player: {
-            gameId: player.playerGuid,
-            name: player.playerName,
-            platformId: `astroneer:${player.playerGuid}`,
+            gameId: player.guid,
+            name: player.name,
+            platformId: `astroneer:${player.guid}`,
             steamId: '', // Not provided by RCON
             ip: ''
           }
@@ -518,21 +518,21 @@ function connectToRcon() {
     });
 
     rconClient.on('playerleft', (player: any) => {
-      logger.info(`Player left: ${player.playerName} (${player.playerGuid})`);
+      logger.info(`Player left: ${player.name} (${player.guid})`);
 
       if (isConnectedToTakaro) {
         sendGameEvent('player-disconnected', {
           player: {
-            gameId: player.playerGuid,
-            name: player.playerName,
-            platformId: `astroneer:${player.playerGuid}`
+            gameId: player.guid,
+            name: player.name,
+            platformId: `astroneer:${player.guid}`
           }
         });
       }
     });
 
     rconClient.on('newplayer', (player: any) => {
-      logger.info(`New player detected: ${player.playerName} (${player.playerGuid})`);
+      logger.info(`New player detected: ${player.name} (${player.guid})`);
     });
 
     rconClient.on('save', () => {
