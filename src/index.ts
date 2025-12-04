@@ -226,7 +226,15 @@ async function handleTakaroRequest(message: any) {
       if (isConnectedToRcon && rconClient) {
         try {
           const players = await rconClient.listPlayers();
-          responsePayload = players.map((p: any) => ({
+          // Filter to only return players that are actually in-game (online)
+          const onlinePlayers = players.filter((p: any) => p.inGame === true);
+
+          logger.info(`getPlayers: Found ${players.length} total players, ${onlinePlayers.length} online`);
+          if (onlinePlayers.length > 0) {
+            logger.info(`Online players: ${onlinePlayers.map((p: any) => `${p.name} (${p.guid})`).join(', ')}`);
+          }
+
+          responsePayload = onlinePlayers.map((p: any) => ({
             gameId: String(p.guid),
             name: String(p.name),
             platformId: `astroneer:${p.guid}`,
