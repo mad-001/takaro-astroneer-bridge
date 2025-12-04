@@ -1,4 +1,5 @@
 @echo off
+title Astroneer Bridge
 echo ╔════════════════════════════════════════════════════════╗
 echo ║     TAKARO ASTRONEER BRIDGE                           ║
 echo ╚════════════════════════════════════════════════════════╝

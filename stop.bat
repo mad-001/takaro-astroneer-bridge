@@ -1,4 +1,5 @@
 @echo off
+title Astroneer Bridge - Stop
 echo ╔════════════════════════════════════════════════════════╗
 echo ║     STOPPING TAKARO ASTRONEER BRIDGE                  ║
 echo ╚════════════════════════════════════════════════════════╝
