@@ -31,7 +31,21 @@ You need:
 - Node.js 18+ (for the bridge server)
 - Takaro account
 
-## Installation
+## Quick Download (Recommended)
+
+**Download the ready-to-run package:**
+1. Go to [Releases](https://github.com/mad-001/takaro-astroneer-bridge/releases)
+2. Download `takaro-astroneer-bridge-windows.zip` (includes everything)
+3. Extract anywhere
+4. Copy `.env.example` to `.env` and edit
+5. Double-click `start.bat`
+6. Done!
+
+See `QUICK_START.txt` in the download for detailed setup.
+
+---
+
+## Manual Installation (Advanced)
 
 ### 1. Enable RCON on Astroneer Server
 
