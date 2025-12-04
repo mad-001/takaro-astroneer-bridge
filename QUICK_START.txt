@@ -2,12 +2,14 @@
 ║          TAKARO ASTRONEER BRIDGE - QUICK START GUIDE          ║
 ╚════════════════════════════════════════════════════════════════╝
 
-STEP 1: INSTALL NODE.JS (if not already installed)
+STEP 1: INSTALL NODE.JS
 ───────────────────────────────────────────────────────────────
 Download and install Node.js 18 or newer from:
 https://nodejs.org/
 
 After installing, restart your computer.
+
+(This is the ONLY software you need to install!)
 
 
 STEP 2: ENABLE RCON ON ASTRONEER SERVER
