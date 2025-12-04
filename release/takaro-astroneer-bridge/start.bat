@@ -36,28 +36,15 @@ if not exist TakaroConfig.txt (
     exit /b 1
 )
 
-REM Check if dependencies are installed
-if not exist node_modules (
-    echo Installing dependencies... (one-time setup)
-    call npm install
-    if %ERRORLEVEL% NEQ 0 (
-        echo.
-        echo ERROR: Failed to install dependencies
-        pause
-        exit /b 1
-    )
-)
-
-REM Check if built
+REM Check if dist folder exists
 if not exist dist\index.js (
-    echo Building bridge... (one-time setup)
-    call npm run build
-    if %ERRORLEVEL% NEQ 0 (
-        echo.
-        echo ERROR: Failed to build
-        pause
-        exit /b 1
-    )
+    echo ERROR: Bridge files are missing!
+    echo.
+    echo Please re-download from:
+    echo https://github.com/mad-001/takaro-astroneer-bridge/releases
+    echo.
+    pause
+    exit /b 1
 )
 
 REM Start the bridge
