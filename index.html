@@ -200,11 +200,13 @@
             <li><strong><span class="step-number">2</span>Download & Extract</strong><br>
                 Extract the zip file anywhere on your PC
             </li>
-            <li><strong><span class="step-number">3</span>Enable RCON</strong><br>
-                Edit <code>\astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini</code>
-                <pre><code>ConsolePort=5000
+            <li><strong><span class="step-number">3</span>Enable RCON on Astroneer</strong><br>
+                Open <code>\astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini</code> in Notepad<br>
+                <strong>ADD these two lines</strong> (they won't be there by default):
+                <pre><code>ConsolePort=8778
 ConsolePassword=your-password-here</code></pre>
-                Restart your Astroneer server
+                <small>📝 Use any port number you want - just remember it for Step 4!</small><br>
+                Save and restart your Astroneer server
             </li>
             <li><strong><span class="step-number">4</span>Configure Bridge</strong><br>
                 Open <code>TakaroConfig.txt</code> in Notepad and edit:
@@ -243,7 +245,7 @@ RCON_PASSWORD=same-as-step-3</code></pre>
         <h2>❓ Troubleshooting</h2>
         <ul>
             <li><strong>"node is not recognized"</strong> - Install Node.js and restart your computer</li>
-            <li><strong>"RCON connection failed"</strong> - Check password matches in both files and server is running</li>
+            <li><strong>"RCON connection failed"</strong> - Check that RCON_PORT and RCON_PASSWORD in TakaroConfig.txt match ConsolePort and ConsolePassword in AstroServerSettings.ini. Make sure Astroneer server is running.</li>
             <li><strong>"Takaro connection failed"</strong> - Verify your token is correct at <a href="https://dashboard.takaro.io/gameservers/create" target="_blank">dashboard.takaro.io/gameservers/create</a></li>
         </ul>
 
