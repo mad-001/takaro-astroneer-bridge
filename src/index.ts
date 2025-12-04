@@ -44,6 +44,8 @@ let isConnectedToRcon = false;
 
 // Pending requests (for request/response pattern)
 const pendingRequests = new Map<string, (response: any) => void>();
+const requestTimeouts = new Map<string, NodeJS.Timeout>();
+const REQUEST_TIMEOUT_MS = 30000; // 30 seconds
 
 // Reconnection state
 let reconnectAttempts = 0;
@@ -151,6 +153,10 @@ function handleTakaroMessage(message: any) {
       sendPong();
       break;
 
+    case 'error':
+      logger.error(`Takaro error: ${JSON.stringify(message.payload || message)}`);
+      break;
+
     default:
       logger.warn(`Unknown message type from Takaro: ${message.type}`);
   }
@@ -197,8 +203,8 @@ async function handleTakaroRequest(message: any) {
         try {
           const players = await rconClient.listPlayers();
           responsePayload = players.map((p: any) => ({
-            gameId: p.playerGuid,
-            name: p.playerName,
+            gameId: String(p.playerGuid),
+            name: String(p.playerName),
             platformId: `astroneer:${p.playerGuid}`,
             steamId: '',
             ip: '',
