@@ -1,8 +1,8 @@
 @echo off
 title Astroneer Bridge - Stop
-echo ╔════════════════════════════════════════════════════════╗
-echo ║     STOPPING TAKARO ASTRONEER BRIDGE                  ║
-echo ╚════════════════════════════════════════════════════════╝
+echo ========================================================
+echo      STOPPING TAKARO ASTRONEER BRIDGE
+echo ========================================================
 echo.
 
 REM Find and kill the bridge process

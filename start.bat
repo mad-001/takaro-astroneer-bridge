@@ -1,8 +1,8 @@
 @echo off
 title Astroneer Bridge
-echo ╔════════════════════════════════════════════════════════╗
-echo ║     TAKARO ASTRONEER BRIDGE                           ║
-echo ╚════════════════════════════════════════════════════════╝
+echo ========================================================
+echo      TAKARO ASTRONEER BRIDGE
+echo ========================================================
 echo.
 
 REM Check if Node.js is installed
@@ -51,7 +51,7 @@ if not exist dist\index.js (
 REM Start the bridge
 echo.
 echo Starting bridge server...
-echo ────────────────────────────────────────────────────────
+echo --------------------------------------------------------
 node dist/index.js
 
 pause
