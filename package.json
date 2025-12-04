@@ -1,7 +1,7 @@
 {
   "name": "takaro-astroneer-bridge",
-  "version": "1.0.0",
-  "description": "Bridge server between Astroneer (Lua mod) and Takaro WebSocket",
+  "version": "1.1.0",
+  "description": "Bridge server between Astroneer (RCON) and Takaro WebSocket",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
