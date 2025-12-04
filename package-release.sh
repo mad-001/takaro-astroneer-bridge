@@ -16,6 +16,7 @@ cp -r node_modules release/takaro-astroneer-bridge/
 cp package.json release/takaro-astroneer-bridge/
 cp TakaroConfig.txt release/takaro-astroneer-bridge/
 cp start.bat release/takaro-astroneer-bridge/
+cp stop.bat release/takaro-astroneer-bridge/
 cp QUICK_START.txt release/takaro-astroneer-bridge/
 cp README.md release/takaro-astroneer-bridge/
 
