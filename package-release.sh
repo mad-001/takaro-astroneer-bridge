@@ -14,6 +14,7 @@ mkdir -p release/takaro-astroneer-bridge
 cp -r dist release/takaro-astroneer-bridge/
 cp -r node_modules release/takaro-astroneer-bridge/
 cp package.json release/takaro-astroneer-bridge/
+cp tsconfig.json release/takaro-astroneer-bridge/
 cp TakaroConfig.txt release/takaro-astroneer-bridge/
 cp start.bat release/takaro-astroneer-bridge/
 cp stop.bat release/takaro-astroneer-bridge/
