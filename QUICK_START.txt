@@ -4,8 +4,10 @@
 
 STEP 1: INSTALL NODE.JS (REQUIRED!)
 ───────────────────────────────────────────────────────────────
-Download and install Node.js 18 or newer from:
-https://nodejs.org/
+EASY WAY: Open PowerShell as Administrator and run:
+  winget install OpenJS.NodeJS.LTS
+
+OR download from: https://nodejs.org/
 
 IMPORTANT: Restart your computer after installing!
 

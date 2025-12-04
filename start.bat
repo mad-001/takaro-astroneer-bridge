@@ -9,7 +9,11 @@ where node >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
     echo ERROR: Node.js is not installed!
     echo.
-    echo Please install Node.js 18+ from: https://nodejs.org/
+    echo EASY INSTALL: Open PowerShell as Administrator and run:
+    echo   winget install OpenJS.NodeJS.LTS
+    echo.
+    echo OR download from: https://nodejs.org/
+    echo.
     echo After installing, restart your computer and try again.
     pause
     exit /b 1

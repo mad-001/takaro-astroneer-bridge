@@ -8,7 +8,12 @@ Connects your Astroneer dedicated server to Takaro using RCON. **No mods require
 
 ### Step 1: Install Node.js
 
-Download and install Node.js 18+ from https://nodejs.org/
+**Easy way:** Open PowerShell as Administrator and run:
+```powershell
+winget install OpenJS.NodeJS.LTS
+```
+
+**Or download:** https://nodejs.org/
 
 **Restart your computer after installing.**
 
