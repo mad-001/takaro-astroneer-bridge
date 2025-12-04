@@ -49,18 +49,14 @@ See `QUICK_START.txt` in the download for detailed setup.
 
 ### 1. Enable RCON on Astroneer Server
 
-Edit this file on your Astroneer server:
-```
-\astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini
-```
+Edit `\astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini` and add:
 
-Add these two settings to the file:
 ```ini
 ConsolePort=5000
 ConsolePassword=your-secure-password-here
 ```
 
-**Note:** The file may already have a `[/Script/Astro.AstroServerSettings]` section header. If so, add the settings under that section. Otherwise, just add them anywhere in the file.
+**Note:** Add these anywhere in the file. If you see a `[/Script/Astro.AstroServerSettings]` section, add them there. Otherwise, just add at the end.
 
 Restart your Astroneer server for changes to take effect.
 
@@ -124,11 +120,10 @@ If you want to start completely fresh and remove any previous mods/modifications
 ```
 
 **Step 2: Configure RCON** (Only change needed!)
-```cmd
-# Edit this file:
-# \astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini
+```ini
+Edit: \astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini
 
-# Add these two settings anywhere in the file:
+Add anywhere in the file:
 ConsolePort=5000
 ConsolePassword=your-secure-password
 ```

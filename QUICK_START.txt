@@ -14,17 +14,14 @@ After installing, restart your computer.
 
 STEP 2: ENABLE RCON ON ASTRONEER SERVER
 ───────────────────────────────────────────────────────────────
-Find and edit this file on your Astroneer server:
+Edit this file:
   \astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini
 
 Add these two lines anywhere in the file:
   ConsolePort=5000
   ConsolePassword=YourSecurePasswordHere
 
-(If you see [/Script/Astro.AstroServerSettings] section, add them there.
- Otherwise, just add them at the end of the file.)
-
-Save the file and restart your Astroneer server.
+Save and restart your Astroneer server.
 
 
 STEP 3: CONFIGURE THE BRIDGE
