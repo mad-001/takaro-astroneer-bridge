@@ -31,36 +31,17 @@ You need:
 - Node.js 18+ (for the bridge server)
 - Takaro account
 
-## Quick Download (Recommended)
-
-**Download the ready-to-run package:**
-1. Go to [Releases](https://github.com/mad-001/takaro-astroneer-bridge/releases)
-2. Download `takaro-astroneer-bridge-windows.zip` (includes everything)
-3. Extract anywhere
-4. Open `TakaroConfig.txt` in Notepad and edit your settings
-5. Double-click `start.bat`
-6. Done!
-
-See `QUICK_START.txt` in the download for detailed setup.
-
----
-
-## Manual Installation (Advanced)
+## Installation
 
 ### 1. Enable RCON on Astroneer Server
 
-Edit this file on your Astroneer server:
-```
-\astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini
-```
+Edit your Astroneer server's `AstroServerSettings.ini` file (usually in `Astro/Saved/Config/WindowsServer/`):
 
-Add these two settings to the file:
 ```ini
+[/Script/Astro.AstroServerSettings]
 ConsolePort=5000
 ConsolePassword=your-secure-password-here
 ```
-
-**Note:** The file may already have a `[/Script/Astro.AstroServerSettings]` section header. If so, add the settings under that section. Otherwise, just add them anywhere in the file.
 
 Restart your Astroneer server for changes to take effect.
 
@@ -73,11 +54,11 @@ npm install
 npm run build
 ```
 
-### 3. Configure
+### 3. Configure Environment
 
-Edit `TakaroConfig.txt` with your settings:
+Create a `.env` file:
 
-```ini
+```bash
 # Takaro Configuration
 IDENTITY_TOKEN=your-server-name
 REGISTRATION_TOKEN=your-registration-token-from-takaro
@@ -92,8 +73,6 @@ RCON_PASSWORD=your-secure-password-here
 ```
 
 Get your registration token from the Takaro dashboard when adding a new game server.
-
-**Note:** No need to copy or rename files - just edit `TakaroConfig.txt` directly!
 
 ### 4. Start the Bridge
 
@@ -125,10 +104,10 @@ If you want to start completely fresh and remove any previous mods/modifications
 
 **Step 2: Configure RCON** (Only change needed!)
 ```cmd
-# Edit this file:
-# \astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini
+# Edit: Astro/Saved/Config/WindowsServer/AstroServerSettings.ini
+# Add these lines:
 
-# Add these two settings anywhere in the file:
+[/Script/Astro.AstroServerSettings]
 ConsolePort=5000
 ConsolePassword=your-secure-password
 ```
@@ -151,7 +130,7 @@ npm run build
 
 **Step 5: Configure Bridge**
 ```cmd
-# Edit TakaroConfig.txt with:
+# Create .env file with:
 IDENTITY_TOKEN=your-server-name
 REGISTRATION_TOKEN=your-takaro-token
 RCON_HOST=127.0.0.1
@@ -177,7 +156,7 @@ C:\AstroneerServer\
 C:\TakaroBridge\  (or anywhere else)
   └── takaro-astroneer-bridge\
       ├── dist\index.js  ← Bridge runs here
-      └── TakaroConfig.txt  ← Bridge config (just edit this!)
+      └── .env  ← Bridge config
 ```
 
 ---
@@ -226,7 +205,7 @@ Takaro can execute these commands through the bridge:
 
 ### Bridge won't connect to Takaro
 
-- Verify `IDENTITY_TOKEN` and `REGISTRATION_TOKEN` in `TakaroConfig.txt`
+- Verify `IDENTITY_TOKEN` and `REGISTRATION_TOKEN` in `.env`
 - Check internet connectivity
 - Review logs for connection errors
 

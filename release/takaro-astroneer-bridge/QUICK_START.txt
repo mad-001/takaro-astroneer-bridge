@@ -2,40 +2,34 @@
 ║          TAKARO ASTRONEER BRIDGE - QUICK START GUIDE          ║
 ╚════════════════════════════════════════════════════════════════╝
 
-STEP 1: INSTALL NODE.JS
+STEP 1: INSTALL NODE.JS (if not already installed)
 ───────────────────────────────────────────────────────────────
 Download and install Node.js 18 or newer from:
 https://nodejs.org/
 
 After installing, restart your computer.
 
-(This is the ONLY software you need to install!)
-
 
 STEP 2: ENABLE RCON ON ASTRONEER SERVER
 ───────────────────────────────────────────────────────────────
-Find and edit this file on your Astroneer server:
-  \astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini
+Edit this file:
+  Astro\Saved\Config\WindowsServer\AstroServerSettings.ini
 
-Add these two lines anywhere in the file:
+Add these two lines:
   ConsolePort=5000
   ConsolePassword=YourSecurePasswordHere
 
-(If you see [/Script/Astro.AstroServerSettings] section, add them there.
- Otherwise, just add them at the end of the file.)
-
-Save the file and restart your Astroneer server.
+Restart your Astroneer server.
 
 
 STEP 3: CONFIGURE THE BRIDGE
 ───────────────────────────────────────────────────────────────
-1. Open "TakaroConfig.txt" in Notepad
-2. Replace the placeholder values with your settings:
+1. Copy ".env.example" to ".env"
+2. Edit ".env" with your settings:
    - IDENTITY_TOKEN: Your server name
    - REGISTRATION_TOKEN: From Takaro dashboard
    - RCON_PORT: Same as ConsolePort (default: 5000)
    - RCON_PASSWORD: Same as ConsolePassword
-3. Save the file
 
 
 STEP 4: START THE BRIDGE

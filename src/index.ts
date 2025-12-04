@@ -1,11 +1,35 @@
 import express from 'express';
 import WebSocket from 'ws';
 import winston from 'winston';
-import dotenv from 'dotenv';
+import * as fs from 'fs';
+import * as path from 'path';
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
-// Load environment variables
-dotenv.config();
+// Load configuration from TakaroConfig.txt
+function loadConfig() {
+  const configPath = path.join(process.cwd(), 'TakaroConfig.txt');
+
+  if (!fs.existsSync(configPath)) {
+    console.error('ERROR: TakaroConfig.txt not found!');
+    console.error('Please edit TakaroConfig.txt with your server settings.');
+    process.exit(1);
+  }
+
+  const configContent = fs.readFileSync(configPath, 'utf-8');
+
+  configContent.split('\n').forEach(line => {
+    line = line.trim();
+    if (line && !line.startsWith('#')) {
+      const [key, ...valueParts] = line.split('=');
+      const value = valueParts.join('=').trim();
+      if (key && value) {
+        process.env[key.trim()] = value;
+      }
+    }
+  });
+}
+
+loadConfig();
 
 // Configure logger
 const logger = winston.createLogger({

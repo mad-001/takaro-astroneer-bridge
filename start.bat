@@ -15,14 +15,19 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b 1
 )
 
-REM Check if .env exists
-if not exist .env (
-    echo ERROR: Configuration not found!
+REM Check if TakaroConfig.txt exists
+if not exist TakaroConfig.txt (
+    echo ERROR: Configuration file not found!
     echo.
-    echo Please copy .env.example to .env and configure it:
-    echo   1. Copy .env.example to .env
-    echo   2. Edit .env with your Takaro tokens and RCON password
-    echo   3. Run start.bat again
+    echo Please edit TakaroConfig.txt with your settings:
+    echo   1. Open TakaroConfig.txt in Notepad
+    echo   2. Replace the placeholder values with your actual settings:
+    echo      - IDENTITY_TOKEN: Your server name
+    echo      - REGISTRATION_TOKEN: From Takaro dashboard
+    echo      - RCON_PASSWORD: Same as ConsolePassword in Astroneer settings
+    echo   3. Save and run start.bat again
+    echo.
+    echo TIP: Right-click TakaroConfig.txt and select "Edit" or "Open with Notepad"
     pause
     exit /b 1
 )
