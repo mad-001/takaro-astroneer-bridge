@@ -48,6 +48,11 @@ You should see:
 
 TROUBLESHOOTING
 ───────────────────────────────────────────────────────────────
+⚠️  "Publisher cannot be verified" security warning
+   → This is NORMAL for downloaded files
+   → Click "More info" then "Run anyway"
+   → OR: Right-click start.bat → Properties → Check "Unblock" → Apply
+
 ❌ "node is not recognized"
    → Node.js not installed or need to restart computer
 
@@ -56,7 +61,7 @@ TROUBLESHOOTING
    → Make sure Astroneer server is running
 
 ❌ "Takaro connection failed"
-   → Check IDENTITY_TOKEN and REGISTRATION_TOKEN in .env
+   → Check IDENTITY_TOKEN and REGISTRATION_TOKEN in TakaroConfig.txt
    → Check internet connection
 
 For more help, see README.md or visit:

@@ -72,6 +72,11 @@ Double-click `stop.bat`
 
 ## Troubleshooting
 
+**"Publisher cannot be verified" security warning**
+- This is normal for downloaded files
+- Click **"More info"** then **"Run anyway"**
+- OR: Right-click start.bat → Properties → Check "Unblock" → Apply → OK
+
 **"node is not recognized"**
 - Install Node.js from https://nodejs.org/
 - Restart your computer after installing
