@@ -2,6 +2,7 @@ import express from 'express';
 import WebSocket from 'ws';
 import winston from 'winston';
 import dotenv from 'dotenv';
+import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
 // Load environment variables
 dotenv.config();
@@ -27,10 +28,19 @@ const IDENTITY_TOKEN = process.env.IDENTITY_TOKEN || '';
 const REGISTRATION_TOKEN = process.env.REGISTRATION_TOKEN || '';
 const HTTP_PORT = parseInt(process.env.HTTP_PORT || '3000', 10);
 
+// RCON Configuration
+const RCON_HOST = process.env.RCON_HOST || '127.0.0.1';
+const RCON_PORT = parseInt(process.env.RCON_PORT || '5000', 10);
+const RCON_PASSWORD = process.env.RCON_PASSWORD || '';
+
 // Takaro WebSocket connection
 let takaroWs: WebSocket | null = null;
 let isConnectedToTakaro = false;
 let reconnectTimeout: NodeJS.Timeout | null = null;
+
+// Astroneer RCON connection
+let rconClient: any = null;
+let isConnectedToRcon = false;
 
 // Pending requests (for request/response pattern)
 const pendingRequests = new Map<string, (response: any) => void>();
@@ -182,8 +192,25 @@ async function handleTakaroRequest(message: any) {
       break;
 
     case 'getPlayers':
-      // Return empty array for now - will be implemented with Lua mod
-      responsePayload = [];
+      // Get player list from RCON
+      if (isConnectedToRcon && rconClient) {
+        try {
+          const players = await rconClient.listPlayers();
+          responsePayload = players.map((p: any) => ({
+            gameId: p.playerGuid,
+            name: p.playerName,
+            platformId: `astroneer:${p.playerGuid}`,
+            steamId: '',
+            ip: '',
+            ping: 0
+          }));
+        } catch (error) {
+          logger.error(`Failed to get players from RCON: ${error}`);
+          responsePayload = [];
+        }
+      } else {
+        responsePayload = [];
+      }
       break;
 
     case 'sendMessage':
@@ -222,16 +249,20 @@ async function handleTakaroRequest(message: any) {
       break;
 
     case 'kickPlayer':
-      // Queue for Lua mod
+      // Kick player via RCON
       if (args) {
         const kickArgs = typeof args === 'string' ? JSON.parse(args) : args;
-        pendingCommands.push({
-          requestId,
-          action,
-          args: kickArgs
-        });
-        logger.info(`Queued kickPlayer for Lua mod: ${kickArgs.gameId}`);
-        return;
+        if (isConnectedToRcon && rconClient) {
+          try {
+            await rconClient.kickPlayer(kickArgs.gameId);
+            responsePayload = { success: true };
+          } catch (error) {
+            logger.error(`Failed to kick player via RCON: ${error}`);
+            responsePayload = { success: false, error: String(error) };
+          }
+        } else {
+          responsePayload = { success: false, error: 'RCON not connected' };
+        }
       } else {
         responsePayload = { success: false, error: 'No player specified' };
       }
@@ -402,6 +433,90 @@ function scheduleReconnect() {
 }
 
 // ========================================
+// Astroneer RCON Client
+// ========================================
+
+/**
+ * Connect to Astroneer RCON server
+ */
+function connectToRcon() {
+  if (!RCON_PASSWORD) {
+    logger.warn('RCON_PASSWORD not configured, skipping RCON connection');
+    return;
+  }
+
+  logger.info(`Connecting to Astroneer RCON at ${RCON_HOST}:${RCON_PORT}`);
+
+  try {
+    rconClient = new AstroneerRcon({
+      ip: RCON_HOST,
+      port: RCON_PORT,
+      password: RCON_PASSWORD
+    });
+
+    // Connection events
+    rconClient.on('connected', () => {
+      logger.info('Connected to Astroneer RCON');
+      isConnectedToRcon = true;
+    });
+
+    rconClient.on('disconnect', () => {
+      logger.warn('Disconnected from Astroneer RCON');
+      isConnectedToRcon = false;
+    });
+
+    rconClient.on('error', (error: Error) => {
+      logger.error(`RCON error: ${error.message}`);
+      isConnectedToRcon = false;
+    });
+
+    // Player events
+    rconClient.on('playerjoin', (player: any) => {
+      logger.info(`Player joined: ${player.playerName} (${player.playerGuid})`);
+
+      if (isConnectedToTakaro) {
+        sendGameEvent('player-connected', {
+          player: {
+            gameId: player.playerGuid,
+            name: player.playerName,
+            platformId: `astroneer:${player.playerGuid}`,
+            steamId: '', // Not provided by RCON
+            ip: ''
+          }
+        });
+      }
+    });
+
+    rconClient.on('playerleft', (player: any) => {
+      logger.info(`Player left: ${player.playerName} (${player.playerGuid})`);
+
+      if (isConnectedToTakaro) {
+        sendGameEvent('player-disconnected', {
+          player: {
+            gameId: player.playerGuid,
+            name: player.playerName,
+            platformId: `astroneer:${player.playerGuid}`
+          }
+        });
+      }
+    });
+
+    rconClient.on('newplayer', (player: any) => {
+      logger.info(`New player detected: ${player.playerName} (${player.playerGuid})`);
+    });
+
+    rconClient.on('save', () => {
+      logger.info('Game saved');
+    });
+
+    // Connect
+    rconClient.connect();
+  } catch (error) {
+    logger.error(`Failed to initialize RCON client: ${error}`);
+  }
+}
+
+// ========================================
 // HTTP API for Lua mod
 // ========================================
 
@@ -416,6 +531,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     takaroConnected: isConnectedToTakaro,
+    rconConnected: isConnectedToRcon,
     uptime: Math.floor(uptime / 1000),
     metrics: {
       requestsReceived: metrics.requestsReceived,
@@ -495,11 +611,17 @@ app.listen(HTTP_PORT, '127.0.0.1', () => {
 // Connect to Takaro
 connectToTakaro();
 
+// Connect to Astroneer RCON (if configured)
+connectToRcon();
+
 // Handle process termination
 process.on('SIGINT', () => {
   logger.info('Shutting down...');
   if (takaroWs) {
     takaroWs.close();
+  }
+  if (rconClient) {
+    rconClient.disconnect();
   }
   process.exit(0);
 });
@@ -508,6 +630,9 @@ process.on('SIGTERM', () => {
   logger.info('Shutting down...');
   if (takaroWs) {
     takaroWs.close();
+  }
+  if (rconClient) {
+    rconClient.disconnect();
   }
   process.exit(0);
 });
