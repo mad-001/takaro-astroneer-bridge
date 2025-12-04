@@ -6,14 +6,21 @@ Connects your Astroneer dedicated server to Takaro using RCON. **No mods require
 
 ## Installation
 
-### 1. Download
+### Step 1: Install Node.js
+
+Download and install Node.js 18+ from https://nodejs.org/
+
+**Restart your computer after installing.**
+
+### Step 2: Download the Bridge
+
 Go to [Releases](https://github.com/mad-001/takaro-astroneer-bridge/releases) and download `takaro-astroneer-bridge-windows.zip`
 
 Extract it anywhere on your PC.
 
-### 2. Enable RCON on Astroneer Server
+### Step 3: Enable RCON on Astroneer Server
 
-Edit this file:
+Edit this file on your Astroneer server:
 ```
 \astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini
 ```
@@ -24,21 +31,21 @@ ConsolePort=5000
 ConsolePassword=your-password-here
 ```
 
-Restart your Astroneer server.
+Save and restart your Astroneer server.
 
-### 3. Configure the Bridge
+### Step 4: Configure the Bridge
 
 Open `TakaroConfig.txt` in Notepad and edit:
 
 ```ini
 IDENTITY_TOKEN=your-server-name
 REGISTRATION_TOKEN=get-this-from-takaro-dashboard
-RCON_PASSWORD=same-password-as-step-2
+RCON_PASSWORD=same-password-as-step-3
 ```
 
 Save the file.
 
-### 4. Start the Bridge
+### Step 5: Start the Bridge
 
 Double-click `start.bat`
 
@@ -60,6 +67,10 @@ Double-click `stop.bat`
 
 ## Troubleshooting
 
+**"node is not recognized"**
+- Install Node.js from https://nodejs.org/
+- Restart your computer after installing
+
 **"RCON connection failed"**
 - Check that ConsolePort and ConsolePassword match in both files
 - Make sure Astroneer server is running
@@ -68,15 +79,11 @@ Double-click `stop.bat`
 - Check IDENTITY_TOKEN and REGISTRATION_TOKEN in TakaroConfig.txt
 - Get tokens from https://app.takaro.io/
 
-**Bridge won't start**
-- Install Node.js 18+ from https://nodejs.org/
-- Restart your computer after installing
-
 ---
 
 ## What You Need
 
-- Astroneer Dedicated Server (vanilla, no mods)
+- Astroneer Dedicated Server running
 - Node.js 18+
 - Takaro account at https://takaro.io
 
@@ -85,5 +92,5 @@ Double-click `stop.bat`
 ## Links
 
 - [Takaro Platform](https://takaro.io)
-- [GitHub Repository](https://github.com/mad-001/takaro-astroneer-bridge)
+- [Get Tokens](https://app.takaro.io/)
 - [Report Issues](https://github.com/mad-001/takaro-astroneer-bridge/issues)

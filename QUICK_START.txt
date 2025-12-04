@@ -2,12 +2,12 @@
 ║          TAKARO ASTRONEER BRIDGE - QUICK START GUIDE          ║
 ╚════════════════════════════════════════════════════════════════╝
 
-STEP 1: INSTALL NODE.JS
+STEP 1: INSTALL NODE.JS (REQUIRED!)
 ───────────────────────────────────────────────────────────────
 Download and install Node.js 18 or newer from:
 https://nodejs.org/
 
-After installing, restart your computer.
+IMPORTANT: Restart your computer after installing!
 
 (This is the ONLY software you need to install!)
 
