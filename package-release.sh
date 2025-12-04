@@ -8,21 +8,21 @@ npm run build
 
 # Create release directory
 rm -rf release
-mkdir -p release/takaro-astroneer-bridge
+mkdir -p "release/astroneer bridge"
 
 # Copy ONLY runtime files (no build tools!)
-cp -r dist release/takaro-astroneer-bridge/
-cp -r node_modules release/takaro-astroneer-bridge/
-cp package.json release/takaro-astroneer-bridge/
-cp TakaroConfig.txt release/takaro-astroneer-bridge/
-cp start.bat release/takaro-astroneer-bridge/
-cp stop.bat release/takaro-astroneer-bridge/
-cp QUICK_START.txt release/takaro-astroneer-bridge/
-cp README.md release/takaro-astroneer-bridge/
+cp -r dist "release/astroneer bridge/"
+cp -r node_modules "release/astroneer bridge/"
+cp package.json "release/astroneer bridge/"
+cp TakaroConfig.txt "release/astroneer bridge/"
+cp start.bat "release/astroneer bridge/"
+cp stop.bat "release/astroneer bridge/"
+cp QUICK_START.txt "release/astroneer bridge/"
+cp README.md "release/astroneer bridge/"
 
 # Create zip
 cd release
-zip -r takaro-astroneer-bridge-windows.zip takaro-astroneer-bridge
+zip -r astroneer-bridge.zip "astroneer bridge"
 
 echo "✅ Release package created: release/takaro-astroneer-bridge-windows.zip"
 echo "Size: $(du -h takaro-astroneer-bridge-windows.zip | cut -f1)"
