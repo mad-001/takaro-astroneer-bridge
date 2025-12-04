@@ -209,12 +209,15 @@ ConsolePassword=your-password-here</code></pre>
                 Save and restart your Astroneer server
             </li>
             <li><strong><span class="step-number">4</span>Configure Bridge</strong><br>
-                Open <code>TakaroConfig.txt</code> in Notepad and edit:
+                Open <code>TakaroConfig.txt</code> in Notepad and edit these settings:
                 <pre><code>IDENTITY_TOKEN=your-server-name
 REGISTRATION_TOKEN=get-from-takaro-dashboard
+HTTP_PORT=3535
+RCON_HOST=127.0.0.1
 RCON_PORT=8778
 RCON_PASSWORD=same-password-as-step-3</code></pre>
-                <small>⚠️ RCON_PORT must match the ConsolePort from Step 3!</small>
+                <small>⚠️ RCON_PORT must match ConsolePort from Step 3!</small><br>
+                <small>💡 If bridge is on same PC as Astroneer, keep RCON_HOST as 127.0.0.1</small>
             </li>
             <li><strong><span class="step-number">5</span>Start the Bridge</strong><br>
                 Double-click <code>start.bat</code>
