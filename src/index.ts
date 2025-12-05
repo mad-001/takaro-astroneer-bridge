@@ -32,103 +32,116 @@ function loadConfig() {
 loadConfig();
 
 // Command help documentation (from Astroneer RCON Research v1.0.0)
+// NOTE: Commands are listed WITHOUT "DS" prefix - the bridge adds it automatically
 function getCommandHelp(): string {
   return `
 ╔═══════════════════════════════════════════════════════════════════════════╗
 ║                    ASTRONEER RCON COMMAND REFERENCE                       ║
+║     NOTE: Type commands WITHOUT "DS" prefix - it's added automatically    ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
 ═══ PLAYER MANAGEMENT ═══════════════════════════════════════════════════════
 
-DSListPlayers
+ListPlayers
   Description: List all players with GUIDs, names, and status
   Arguments: None
   Returns: Player info array with GUIDs, categories, names, inGame status
+  Sends: DSListPlayers
 
-DSKickPlayerGuid <playerGuid>
+KickPlayerGuid <playerGuid>
   Description: Kick a player by their GUID
   Arguments: playerGuid (string) - Player's unique GUID
   Returns: Success message with GUID
-  Example: DSKickPlayerGuid 403858294871376674
+  Example: KickPlayerGuid 403858294871376674
+  Sends: DSKickPlayerGuid 403858294871376674
 
-DSSetPlayerCategoryForPlayerName "<playerName>" <category>
+SetPlayerCategoryForPlayerName "<playerName>" <category>
   Description: Set player role by name (most reliable method)
   Arguments:
     - playerName (string) - Player's display name (use quotes if spaces)
     - category (string) - Owner, Admin, Whitelisted, Unlisted, or Blacklisted
   Returns: Success message with player info
-  Example: DSSetPlayerCategoryForPlayerName "Mad" Admin
+  Example: SetPlayerCategoryForPlayerName "Mad" Admin
+  Sends: DSSetPlayerCategoryForPlayerName "Mad" Admin
 
-DSSetPlayerCategoryGuid <playerGuid> <category>
+SetPlayerCategoryGuid <playerGuid> <category>
   Description: Set player role by GUID (may be buggy)
   Arguments:
     - playerGuid (string) - Player's unique GUID
     - category (string) - Owner, Admin, Whitelisted, Unlisted, or Blacklisted
   Returns: Success message
-  Note: Use DSSetPlayerCategoryForPlayerName instead for reliability
+  Note: Use SetPlayerCategoryForPlayerName instead for reliability
 
 ═══ SERVER MANAGEMENT ═══════════════════════════════════════════════════════
 
-DSServerStatistics
+ServerStatistics
   Description: Get detailed server statistics
   Arguments: None
   Returns: Server info (build, FPS, players, save name, passwords, whitelist)
-  Example: DSServerStatistics
+  Example: ServerStatistics
+  Sends: DSServerStatistics
 
-DSServerShutdown
+ServerShutdown
   Description: Gracefully shutdown the server
   Arguments: None
   Returns: Confirmation message
   Warning: This will stop the server!
 
-DSSetPassword <password>
+SetPassword <password>
   Description: Set or change server password
   Arguments: password (string) - New password (empty string to remove)
   Returns: Confirmation message
-  Example: DSSetPassword mypassword123
+  Example: SetPassword mypassword123
+  Sends: DSSetPassword mypassword123
 
-DSSetDenyUnlisted <true|false>
+SetDenyUnlisted <true|false>
   Description: Enable or disable whitelist enforcement
   Arguments: boolean - "true" to enable whitelist, "false" to disable
   Returns: Confirmation message
-  Example: DSSetDenyUnlisted true
+  Example: SetDenyUnlisted true
+  Sends: DSSetDenyUnlisted true
 
 ═══ SAVE GAME MANAGEMENT ════════════════════════════════════════════════════
 
-DSListGames
+ListGames
   Description: List all available save games with metadata
   Arguments: None
   Returns: Active save name and array of available saves
-  Example: DSListGames
+  Example: ListGames
+  Sends: DSListGames
 
-DSSaveGame [saveName]
+SaveGame [saveName]
   Description: Instant save trigger
   Arguments: saveName (string, optional) - Name for new save
   Returns: Confirmation message
-  Example: DSSaveGame MyBackup
+  Example: SaveGame MyBackup
+  Sends: DSSaveGame MyBackup
 
-DSLoadGame <saveName>
+LoadGame <saveName>
   Description: Load specified save as active
   Arguments: saveName (string) - Name of save to load
   Returns: Confirmation message
-  Example: DSLoadGame SaveGame$2025.12.04-12.00.00
+  Example: LoadGame SaveGame$2025.12.04-12.00.00
+  Sends: DSLoadGame SaveGame$2025.12.04-12.00.00
 
-DSNewGame <saveName>
+NewGame <saveName>
   Description: Create new save (forces player reload)
   Arguments: saveName (string) - Name for new save
   Returns: Confirmation message
   Warning: Forces all players to reload!
-  Example: DSNewGame NewAdventure
+  Example: NewGame NewAdventure
+  Sends: DSNewGame NewAdventure
 
-DSRenameGame <oldName> <newName>
+RenameGame <oldName> <newName>
   Description: Rename a save file
   Arguments:
     - oldName (string) - Current save name
     - newName (string) - New save name
   Returns: Confirmation message
-  Example: DSRenameGame OldSave NewSave
+  Example: RenameGame OldSave NewSave
+  Sends: DSRenameGame OldSave NewSave
 
-DSDeleteGame <saveName>
+DeleteGame <saveName>
   Description: Delete a save file
   Arguments: saveName (string) - Name of save to delete
   Returns: Confirmation message
@@ -451,6 +464,48 @@ async function handleTakaroRequest(message: any) {
             responsePayload = { success: true };
           } catch (error) {
             logger.error(`Failed to kick player via RCON: ${error}`);
+            responsePayload = { success: false, error: String(error) };
+          }
+        } else {
+          responsePayload = { success: false, error: 'RCON not connected' };
+        }
+      } else {
+        responsePayload = { success: false, error: 'No player specified' };
+      }
+      break;
+
+    case 'banPlayer':
+      // Ban player by setting category to Blacklisted using GUID
+      if (args) {
+        const banArgs = typeof args === 'string' ? JSON.parse(args) : args;
+        if (isConnectedToRcon && rconClient) {
+          try {
+            await rconClient.sendRaw(`SetPlayerCategoryGuid ${banArgs.gameId} Blacklisted`);
+            logger.info(`Banned player GUID: ${banArgs.gameId}`);
+            responsePayload = { success: true };
+          } catch (error) {
+            logger.error(`Failed to ban player via RCON: ${error}`);
+            responsePayload = { success: false, error: String(error) };
+          }
+        } else {
+          responsePayload = { success: false, error: 'RCON not connected' };
+        }
+      } else {
+        responsePayload = { success: false, error: 'No player specified' };
+      }
+      break;
+
+    case 'unbanPlayer':
+      // Unban player by setting category back to Unlisted using GUID
+      if (args) {
+        const unbanArgs = typeof args === 'string' ? JSON.parse(args) : args;
+        if (isConnectedToRcon && rconClient) {
+          try {
+            await rconClient.sendRaw(`SetPlayerCategoryGuid ${unbanArgs.gameId} Unlisted`);
+            logger.info(`Unbanned player GUID: ${unbanArgs.gameId}`);
+            responsePayload = { success: true };
+          } catch (error) {
+            logger.error(`Failed to unban player via RCON: ${error}`);
             responsePayload = { success: false, error: String(error) };
           }
         } else {
