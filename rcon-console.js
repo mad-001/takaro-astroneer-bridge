@@ -35,27 +35,26 @@ function loadConfig() {
 }
 
 // RCON command help reference
+// NOTE: Commands are shown WITH "DS" prefix for clarity, but sendRaw() adds it automatically
+// So when you type "ListPlayers", it sends "DSListPlayers" to the server
 const COMMAND_HELP = {
   'help': 'Show this help message',
   'exit': 'Exit the console',
   'quit': 'Exit the console',
   'clear': 'Clear the console screen',
-  '',
-  '=== PLAYER COMMANDS ===': '',
-  'ListPlayers': 'List all players and their status',
+  '\n=== PLAYER COMMANDS ===': '',
+  'ListPlayers': 'List all players and their status (sends DSListPlayers)',
   'KickPlayerGuid <guid>': 'Kick a player by their GUID',
   'SetPlayerCategoryForPlayerGuid <guid> <category>': 'Change player role (Owner/Admin/Whitelisted/User)',
-  '',
-  '=== SERVER COMMANDS ===': '',
-  'DSServerStatistics': 'Get detailed server statistics',
+  '\n=== SERVER COMMANDS ===': '',
+  'ServerStatistics': 'Get detailed server statistics',
   'ServerShutdown': 'Shutdown the server',
   'SetServerName <name>': 'Change the server name',
   'SetPassword <password>': 'Set server password (empty to remove)',
   'SetDenyUnlisted <true|false>': 'Enable/disable whitelist',
   'SetActivityTimeout <seconds>': 'Set AFK timeout in seconds',
   'SetSaveGameInterval <seconds>': 'Set autosave interval in seconds',
-  '',
-  '=== SAVE GAME COMMANDS ===': '',
+  '\n=== SAVE GAME COMMANDS ===': '',
   'ListGames': 'List all save games',
   'SaveGame [name]': 'Save the current game (optional: with new name)',
   'LoadGame <name>': 'Load a save game',
@@ -63,8 +62,7 @@ const COMMAND_HELP = {
   'RenameGame <oldName> <newName>': 'Rename a save game',
   'DeleteGame <name>': 'Delete a save game',
   'CreativeMode': 'Toggle creative mode',
-  '',
-  '=== EXAMPLES ===': '',
+  '\n=== EXAMPLES ===': '',
   '  ListPlayers': '',
   '  KickPlayerGuid 403858294871376674': '',
   '  SetPassword mypassword123': '',
@@ -85,7 +83,7 @@ async function main() {
   console.log('');
 
   const rcon = new RconClient({
-    host: config.RCON_HOST,
+    ip: config.RCON_HOST,
     port: parseInt(config.RCON_PORT),
     password: config.RCON_PASSWORD
   });
@@ -93,7 +91,7 @@ async function main() {
   // Connect to RCON
   try {
     await new Promise((resolve, reject) => {
-      rcon.on('authenticated', resolve);
+      rcon.on('connected', resolve);
       rcon.on('error', reject);
       rcon.connect();
 
@@ -167,10 +165,10 @@ async function main() {
 
     // Send command to RCON
     try {
-      console.log('');
       const result = await rcon.sendRaw(command);
 
       // Format the output nicely
+      console.log('');
       if (result && typeof result === 'object') {
         console.log(JSON.stringify(result, null, 2));
       } else if (result) {
@@ -181,7 +179,8 @@ async function main() {
       console.log('');
 
     } catch (error) {
-      console.error(`\n❌ Error: ${error.message}\n`);
+      console.error(`\n❌ Error:`, error.message);
+      console.log('');
     }
 
     rl.prompt();

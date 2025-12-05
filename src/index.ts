@@ -31,6 +31,133 @@ function loadConfig() {
 
 loadConfig();
 
+// Command help documentation (from Astroneer RCON Research v1.0.0)
+function getCommandHelp(): string {
+  return `
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                    ASTRONEER RCON COMMAND REFERENCE                       ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+═══ PLAYER MANAGEMENT ═══════════════════════════════════════════════════════
+
+DSListPlayers
+  Description: List all players with GUIDs, names, and status
+  Arguments: None
+  Returns: Player info array with GUIDs, categories, names, inGame status
+
+DSKickPlayerGuid <playerGuid>
+  Description: Kick a player by their GUID
+  Arguments: playerGuid (string) - Player's unique GUID
+  Returns: Success message with GUID
+  Example: DSKickPlayerGuid 403858294871376674
+
+DSSetPlayerCategoryForPlayerName "<playerName>" <category>
+  Description: Set player role by name (most reliable method)
+  Arguments:
+    - playerName (string) - Player's display name (use quotes if spaces)
+    - category (string) - Owner, Admin, Whitelisted, Unlisted, or Blacklisted
+  Returns: Success message with player info
+  Example: DSSetPlayerCategoryForPlayerName "Mad" Admin
+
+DSSetPlayerCategoryGuid <playerGuid> <category>
+  Description: Set player role by GUID (may be buggy)
+  Arguments:
+    - playerGuid (string) - Player's unique GUID
+    - category (string) - Owner, Admin, Whitelisted, Unlisted, or Blacklisted
+  Returns: Success message
+  Note: Use DSSetPlayerCategoryForPlayerName instead for reliability
+
+═══ SERVER MANAGEMENT ═══════════════════════════════════════════════════════
+
+DSServerStatistics
+  Description: Get detailed server statistics
+  Arguments: None
+  Returns: Server info (build, FPS, players, save name, passwords, whitelist)
+  Example: DSServerStatistics
+
+DSServerShutdown
+  Description: Gracefully shutdown the server
+  Arguments: None
+  Returns: Confirmation message
+  Warning: This will stop the server!
+
+DSSetPassword <password>
+  Description: Set or change server password
+  Arguments: password (string) - New password (empty string to remove)
+  Returns: Confirmation message
+  Example: DSSetPassword mypassword123
+
+DSSetDenyUnlisted <true|false>
+  Description: Enable or disable whitelist enforcement
+  Arguments: boolean - "true" to enable whitelist, "false" to disable
+  Returns: Confirmation message
+  Example: DSSetDenyUnlisted true
+
+═══ SAVE GAME MANAGEMENT ════════════════════════════════════════════════════
+
+DSListGames
+  Description: List all available save games with metadata
+  Arguments: None
+  Returns: Active save name and array of available saves
+  Example: DSListGames
+
+DSSaveGame [saveName]
+  Description: Instant save trigger
+  Arguments: saveName (string, optional) - Name for new save
+  Returns: Confirmation message
+  Example: DSSaveGame MyBackup
+
+DSLoadGame <saveName>
+  Description: Load specified save as active
+  Arguments: saveName (string) - Name of save to load
+  Returns: Confirmation message
+  Example: DSLoadGame SaveGame$2025.12.04-12.00.00
+
+DSNewGame <saveName>
+  Description: Create new save (forces player reload)
+  Arguments: saveName (string) - Name for new save
+  Returns: Confirmation message
+  Warning: Forces all players to reload!
+  Example: DSNewGame NewAdventure
+
+DSRenameGame <oldName> <newName>
+  Description: Rename a save file
+  Arguments:
+    - oldName (string) - Current save name
+    - newName (string) - New save name
+  Returns: Confirmation message
+  Example: DSRenameGame OldSave NewSave
+
+DSDeleteGame <saveName>
+  Description: Delete a save file
+  Arguments: saveName (string) - Name of save to delete
+  Returns: Confirmation message
+  Warning: This permanently deletes the save!
+  Example: DSDeleteGame UnwantedSave
+
+═══ PLAYER CATEGORIES ═══════════════════════════════════════════════════════
+
+Owner        - Full permissions, cannot be changed, always allowed
+Admin        - Maximum permissions except ownership, always allowed
+Whitelisted  - Standard player, allowed when whitelist is enabled
+Unlisted     - No permissions, blocked when whitelist is enabled
+Blacklisted  - Banned from server, always blocked
+
+═══ NOTES ═══════════════════════════════════════════════════════════════════
+
+• Player GUIDs are permanent identifiers - use them for reliable operations
+• Player names can contain spaces - wrap them in quotes
+• Some commands may not work on all server versions
+• Always use DSSetPlayerCategoryForPlayerName instead of GUID/Index methods
+• Server statistics include: FPS, player count, version, active save
+• Creative mode commands are not functional via RCON
+
+═══════════════════════════════════════════════════════════════════════════════
+
+For more information, visit: https://github.com/mad-001/takaro-astroneer-bridge
+`;
+}
+
 // Configure logger
 const logger = winston.createLogger({
   level: 'info',
@@ -270,19 +397,47 @@ async function handleTakaroRequest(message: any) {
 
     case 'executeCommand':
     case 'executeConsoleCommand':
-      // Queue command for Lua mod to execute
+      // Execute RCON command directly
       if (args) {
         const cmdArgs = typeof args === 'string' ? JSON.parse(args) : args;
-        pendingCommands.push({
-          requestId,
-          action,
-          args: cmdArgs
-        });
-        logger.info(`Queued ${action} for Lua mod: ${cmdArgs.command || 'unknown'}`);
-        // Don't send response yet - wait for Lua to complete it
-        return;
+        const command = cmdArgs.command || '';
+
+        // Special handling for "help" command
+        if (command.toLowerCase() === 'help') {
+          responsePayload = {
+            success: true,
+            rawResult: getCommandHelp()
+          };
+          break;
+        }
+
+        // Execute via RCON
+        if (isConnectedToRcon && rconClient) {
+          try {
+            logger.info(`Executing RCON command: ${command}`);
+            const result = await rconClient.sendRaw(command);
+            responsePayload = {
+              success: true,
+              rawResult: typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
+            };
+          } catch (error) {
+            logger.error(`Failed to execute RCON command: ${error}`);
+            responsePayload = {
+              success: false,
+              rawResult: `Error: ${error}`
+            };
+          }
+        } else {
+          responsePayload = {
+            success: false,
+            rawResult: 'Error: RCON not connected'
+          };
+        }
       } else {
-        responsePayload = { success: false, rawResult: 'No command provided' };
+        responsePayload = {
+          success: false,
+          rawResult: 'Error: No command provided'
+        };
       }
       break;
 
