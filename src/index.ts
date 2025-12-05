@@ -205,6 +205,7 @@ let reconnectTimeout: NodeJS.Timeout | null = null;
 // Astroneer RCON connection
 let rconClient: any = null;
 let isConnectedToRcon = false;
+let rconReconnectTimeout: NodeJS.Timeout | null = null;
 
 // Pending requests (for request/response pattern)
 const pendingRequests = new Map<string, (response: any) => void>();
@@ -215,6 +216,8 @@ const REQUEST_TIMEOUT_MS = 30000; // 30 seconds
 let reconnectAttempts = 0;
 const MAX_RECONNECT_DELAY = 60000; // 60 seconds
 const BASE_RECONNECT_DELAY = 3000; // 3 seconds
+let rconReconnectAttempts = 0;
+const RCON_RECONNECT_DELAY = 5000; // 5 seconds
 
 // Metrics
 const metrics = {
@@ -706,11 +709,17 @@ function connectToRcon() {
     rconClient.on('connected', () => {
       logger.info('Connected to Astroneer RCON');
       isConnectedToRcon = true;
+      rconReconnectAttempts = 0;
+      if (rconReconnectTimeout) {
+        clearTimeout(rconReconnectTimeout);
+        rconReconnectTimeout = null;
+      }
     });
 
     rconClient.on('disconnect', () => {
       logger.warn('Disconnected from Astroneer RCON');
       isConnectedToRcon = false;
+      scheduleRconReconnect();
     });
 
     rconClient.on('error', (error: Error) => {
@@ -725,11 +734,14 @@ function connectToRcon() {
       if (isConnectedToTakaro) {
         sendGameEvent('player-connected', {
           player: {
-            gameId: player.guid,
-            name: player.name,
+            gameId: String(player.guid),
+            name: String(player.name),
+            steamId: null,
+            epicOnlineServicesId: null,
+            xboxLiveId: null,
             platformId: `astroneer:${player.guid}`,
-            steamId: '', // Not provided by RCON
-            ip: ''
+            ip: null,
+            ping: null
           }
         });
       }
@@ -741,9 +753,14 @@ function connectToRcon() {
       if (isConnectedToTakaro) {
         sendGameEvent('player-disconnected', {
           player: {
-            gameId: player.guid,
-            name: player.name,
-            platformId: `astroneer:${player.guid}`
+            gameId: String(player.guid),
+            name: String(player.name),
+            steamId: null,
+            epicOnlineServicesId: null,
+            xboxLiveId: null,
+            platformId: `astroneer:${player.guid}`,
+            ip: null,
+            ping: null
           }
         });
       }
@@ -762,6 +779,23 @@ function connectToRcon() {
   } catch (error) {
     logger.error(`Failed to initialize RCON client: ${error}`);
   }
+}
+
+/**
+ * Schedule RCON reconnection after disconnect
+ */
+function scheduleRconReconnect() {
+  if (rconReconnectTimeout) {
+    clearTimeout(rconReconnectTimeout);
+  }
+
+  logger.info(`Scheduling RCON reconnection in ${RCON_RECONNECT_DELAY}ms...`);
+
+  rconReconnectTimeout = setTimeout(() => {
+    rconReconnectAttempts++;
+    logger.info(`Attempting RCON reconnection (attempt ${rconReconnectAttempts})...`);
+    connectToRcon();
+  }, RCON_RECONNECT_DELAY);
 }
 
 // ========================================
