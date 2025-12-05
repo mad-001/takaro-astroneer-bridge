@@ -768,6 +768,22 @@ function connectToRcon() {
 
     rconClient.on('newplayer', (player: any) => {
       logger.info(`New player detected: ${player.name} (${player.guid})`);
+
+      // New players who are in-game should trigger a join event
+      if (player.inGame && isConnectedToTakaro) {
+        sendGameEvent('player-connected', {
+          player: {
+            gameId: String(player.guid),
+            name: String(player.name),
+            steamId: null,
+            epicOnlineServicesId: null,
+            xboxLiveId: null,
+            platformId: `astroneer:${player.guid}`,
+            ip: null,
+            ping: null
+          }
+        });
+      }
     });
 
     rconClient.on('save', () => {
