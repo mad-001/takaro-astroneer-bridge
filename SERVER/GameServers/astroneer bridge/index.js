@@ -64,103 +64,116 @@ function loadConfig() {
 }
 loadConfig();
 // Command help documentation (from Astroneer RCON Research v1.0.0)
+// NOTE: Commands are listed WITHOUT "DS" prefix - the bridge adds it automatically
 function getCommandHelp() {
     return `
 ╔═══════════════════════════════════════════════════════════════════════════╗
 ║                    ASTRONEER RCON COMMAND REFERENCE                       ║
+║     NOTE: Type commands WITHOUT "DS" prefix - it's added automatically    ║
 ╚═══════════════════════════════════════════════════════════════════════════╝
 
 ═══ PLAYER MANAGEMENT ═══════════════════════════════════════════════════════
 
-DSListPlayers
+ListPlayers
   Description: List all players with GUIDs, names, and status
   Arguments: None
   Returns: Player info array with GUIDs, categories, names, inGame status
+  Sends: DSListPlayers
 
-DSKickPlayerGuid <playerGuid>
+KickPlayerGuid <playerGuid>
   Description: Kick a player by their GUID
   Arguments: playerGuid (string) - Player's unique GUID
   Returns: Success message with GUID
-  Example: DSKickPlayerGuid 403858294871376674
+  Example: KickPlayerGuid 403858294871376674
+  Sends: DSKickPlayerGuid 403858294871376674
 
-DSSetPlayerCategoryForPlayerName "<playerName>" <category>
+SetPlayerCategoryForPlayerName "<playerName>" <category>
   Description: Set player role by name (most reliable method)
   Arguments:
     - playerName (string) - Player's display name (use quotes if spaces)
     - category (string) - Owner, Admin, Whitelisted, Unlisted, or Blacklisted
   Returns: Success message with player info
-  Example: DSSetPlayerCategoryForPlayerName "Mad" Admin
+  Example: SetPlayerCategoryForPlayerName "Mad" Admin
+  Sends: DSSetPlayerCategoryForPlayerName "Mad" Admin
 
-DSSetPlayerCategoryGuid <playerGuid> <category>
+SetPlayerCategoryGuid <playerGuid> <category>
   Description: Set player role by GUID (may be buggy)
   Arguments:
     - playerGuid (string) - Player's unique GUID
     - category (string) - Owner, Admin, Whitelisted, Unlisted, or Blacklisted
   Returns: Success message
-  Note: Use DSSetPlayerCategoryForPlayerName instead for reliability
+  Note: Use SetPlayerCategoryForPlayerName instead for reliability
 
 ═══ SERVER MANAGEMENT ═══════════════════════════════════════════════════════
 
-DSServerStatistics
+ServerStatistics
   Description: Get detailed server statistics
   Arguments: None
   Returns: Server info (build, FPS, players, save name, passwords, whitelist)
-  Example: DSServerStatistics
+  Example: ServerStatistics
+  Sends: DSServerStatistics
 
-DSServerShutdown
+ServerShutdown
   Description: Gracefully shutdown the server
   Arguments: None
   Returns: Confirmation message
   Warning: This will stop the server!
 
-DSSetPassword <password>
+SetPassword <password>
   Description: Set or change server password
   Arguments: password (string) - New password (empty string to remove)
   Returns: Confirmation message
-  Example: DSSetPassword mypassword123
+  Example: SetPassword mypassword123
+  Sends: DSSetPassword mypassword123
 
-DSSetDenyUnlisted <true|false>
+SetDenyUnlisted <true|false>
   Description: Enable or disable whitelist enforcement
   Arguments: boolean - "true" to enable whitelist, "false" to disable
   Returns: Confirmation message
-  Example: DSSetDenyUnlisted true
+  Example: SetDenyUnlisted true
+  Sends: DSSetDenyUnlisted true
 
 ═══ SAVE GAME MANAGEMENT ════════════════════════════════════════════════════
 
-DSListGames
+ListGames
   Description: List all available save games with metadata
   Arguments: None
   Returns: Active save name and array of available saves
-  Example: DSListGames
+  Example: ListGames
+  Sends: DSListGames
 
-DSSaveGame [saveName]
+SaveGame [saveName]
   Description: Instant save trigger
   Arguments: saveName (string, optional) - Name for new save
   Returns: Confirmation message
-  Example: DSSaveGame MyBackup
+  Example: SaveGame MyBackup
+  Sends: DSSaveGame MyBackup
 
-DSLoadGame <saveName>
+LoadGame <saveName>
   Description: Load specified save as active
   Arguments: saveName (string) - Name of save to load
   Returns: Confirmation message
-  Example: DSLoadGame SaveGame$2025.12.04-12.00.00
+  Example: LoadGame SaveGame$2025.12.04-12.00.00
+  Sends: DSLoadGame SaveGame$2025.12.04-12.00.00
 
-DSNewGame <saveName>
+NewGame <saveName>
   Description: Create new save (forces player reload)
   Arguments: saveName (string) - Name for new save
   Returns: Confirmation message
   Warning: Forces all players to reload!
-  Example: DSNewGame NewAdventure
+  Example: NewGame NewAdventure
+  Sends: DSNewGame NewAdventure
 
-DSRenameGame <oldName> <newName>
+RenameGame <oldName> <newName>
   Description: Rename a save file
   Arguments:
     - oldName (string) - Current save name
     - newName (string) - New save name
   Returns: Confirmation message
-  Example: DSRenameGame OldSave NewSave
+  Example: RenameGame OldSave NewSave
+  Sends: DSRenameGame OldSave NewSave
 
-DSDeleteGame <saveName>
+DeleteGame <saveName>
   Description: Delete a save file
   Arguments: saveName (string) - Name of save to delete
   Returns: Confirmation message
@@ -216,6 +229,7 @@ let reconnectTimeout = null;
 // Astroneer RCON connection
 let rconClient = null;
 let isConnectedToRcon = false;
+let rconReconnectTimeout = null;
 // Pending requests (for request/response pattern)
 const pendingRequests = new Map();
 const requestTimeouts = new Map();
@@ -224,6 +238,8 @@ const REQUEST_TIMEOUT_MS = 30000; // 30 seconds
 let reconnectAttempts = 0;
 const MAX_RECONNECT_DELAY = 60000; // 60 seconds
 const BASE_RECONNECT_DELAY = 3000; // 3 seconds
+let rconReconnectAttempts = 0;
+const RCON_RECONNECT_DELAY = 5000; // 5 seconds
 // Metrics
 const metrics = {
     requestsReceived: 0,
@@ -460,6 +476,52 @@ async function handleTakaroRequest(message) {
                 responsePayload = { success: false, error: 'No player specified' };
             }
             break;
+        case 'banPlayer':
+            // Ban player by setting category to Blacklisted using GUID
+            if (args) {
+                const banArgs = typeof args === 'string' ? JSON.parse(args) : args;
+                if (isConnectedToRcon && rconClient) {
+                    try {
+                        await rconClient.sendRaw(`SetPlayerCategoryGuid ${banArgs.gameId} Blacklisted`);
+                        logger.info(`Banned player GUID: ${banArgs.gameId}`);
+                        responsePayload = { success: true };
+                    }
+                    catch (error) {
+                        logger.error(`Failed to ban player via RCON: ${error}`);
+                        responsePayload = { success: false, error: String(error) };
+                    }
+                }
+                else {
+                    responsePayload = { success: false, error: 'RCON not connected' };
+                }
+            }
+            else {
+                responsePayload = { success: false, error: 'No player specified' };
+            }
+            break;
+        case 'unbanPlayer':
+            // Unban player by setting category back to Unlisted using GUID
+            if (args) {
+                const unbanArgs = typeof args === 'string' ? JSON.parse(args) : args;
+                if (isConnectedToRcon && rconClient) {
+                    try {
+                        await rconClient.sendRaw(`SetPlayerCategoryGuid ${unbanArgs.gameId} Unlisted`);
+                        logger.info(`Unbanned player GUID: ${unbanArgs.gameId}`);
+                        responsePayload = { success: true };
+                    }
+                    catch (error) {
+                        logger.error(`Failed to unban player via RCON: ${error}`);
+                        responsePayload = { success: false, error: String(error) };
+                    }
+                }
+                else {
+                    responsePayload = { success: false, error: 'RCON not connected' };
+                }
+            }
+            else {
+                responsePayload = { success: false, error: 'No player specified' };
+            }
+            break;
         case 'getPlayer':
             // Queue for Lua mod
             if (args) {
@@ -627,13 +689,46 @@ function connectToRcon() {
             password: RCON_PASSWORD
         });
         // Connection events
-        rconClient.on('connected', () => {
+        rconClient.on('connected', async () => {
             logger.info('Connected to Astroneer RCON');
             isConnectedToRcon = true;
+            rconReconnectAttempts = 0;
+            if (rconReconnectTimeout) {
+                clearTimeout(rconReconnectTimeout);
+                rconReconnectTimeout = null;
+            }
+            // Send player-connected events for players who are already online
+            // This handles the case where the bridge starts/restarts while players are in-game
+            setTimeout(async () => {
+                try {
+                    const response = await rconClient.listPlayers();
+                    if (response && response.playerInfo) {
+                        for (const player of response.playerInfo) {
+                            if (player.inGame && isConnectedToTakaro) {
+                                logger.info(`Sending initial player-connected for: ${player.playerName} (${player.playerGuid})`);
+                                sendGameEvent('player-connected', {
+                                    player: {
+                                        gameId: String(player.playerGuid),
+                                        name: String(player.playerName),
+                                        platformId: `astroneer:${player.playerGuid}`,
+                                        steamId: '',
+                                        ip: '',
+                                        ping: 0
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+                catch (error) {
+                    logger.error(`Failed to send initial player events: ${error}`);
+                }
+            }, 3000); // Wait 3 seconds for Takaro connection to be ready
         });
         rconClient.on('disconnect', () => {
             logger.warn('Disconnected from Astroneer RCON');
             isConnectedToRcon = false;
+            scheduleRconReconnect();
         });
         rconClient.on('error', (error) => {
             logger.error(`RCON error: ${error.message}`);
@@ -645,11 +740,12 @@ function connectToRcon() {
             if (isConnectedToTakaro) {
                 sendGameEvent('player-connected', {
                     player: {
-                        gameId: player.guid,
-                        name: player.name,
+                        gameId: String(player.guid),
+                        name: String(player.name),
                         platformId: `astroneer:${player.guid}`,
-                        steamId: '', // Not provided by RCON
-                        ip: ''
+                        steamId: '',
+                        ip: '',
+                        ping: 0
                     }
                 });
             }
@@ -659,15 +755,31 @@ function connectToRcon() {
             if (isConnectedToTakaro) {
                 sendGameEvent('player-disconnected', {
                     player: {
-                        gameId: player.guid,
-                        name: player.name,
-                        platformId: `astroneer:${player.guid}`
+                        gameId: String(player.guid),
+                        name: String(player.name),
+                        platformId: `astroneer:${player.guid}`,
+                        steamId: '',
+                        ip: '',
+                        ping: 0
                     }
                 });
             }
         });
         rconClient.on('newplayer', (player) => {
             logger.info(`New player detected: ${player.name} (${player.guid})`);
+            // New players who are in-game should trigger a join event
+            if (player.inGame && isConnectedToTakaro) {
+                sendGameEvent('player-connected', {
+                    player: {
+                        gameId: String(player.guid),
+                        name: String(player.name),
+                        platformId: `astroneer:${player.guid}`,
+                        steamId: '',
+                        ip: '',
+                        ping: 0
+                    }
+                });
+            }
         });
         rconClient.on('save', () => {
             logger.info('Game saved');
@@ -678,6 +790,20 @@ function connectToRcon() {
     catch (error) {
         logger.error(`Failed to initialize RCON client: ${error}`);
     }
+}
+/**
+ * Schedule RCON reconnection after disconnect
+ */
+function scheduleRconReconnect() {
+    if (rconReconnectTimeout) {
+        clearTimeout(rconReconnectTimeout);
+    }
+    logger.info(`Scheduling RCON reconnection in ${RCON_RECONNECT_DELAY}ms...`);
+    rconReconnectTimeout = setTimeout(() => {
+        rconReconnectAttempts++;
+        logger.info(`Attempting RCON reconnection (attempt ${rconReconnectAttempts})...`);
+        connectToRcon();
+    }, RCON_RECONNECT_DELAY);
 }
 // ========================================
 // HTTP API for Lua mod

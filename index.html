@@ -183,11 +183,34 @@
             </ol>
         </div>
 
+        <div class="info">
+            <strong>🎉 v1.7.2 CRITICAL FIX AVAILABLE</strong><br>
+            Player events are now working! This version fixes the data format mismatch that prevented player events from being stored in Takaro.
+        </div>
+
         <h2>📥 Download</h2>
-        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/latest/download/astroneer-bridge.zip" class="download-btn">
-            🌟 Download Latest Version (v1.6.11) 🌟
+        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/latest/download/astroneer-bridge.tar.gz" class="download-btn">
+            🌟 Download Latest Version (v1.7.2) 🌟
         </a>
-        <p><small>Released: December 5, 2025 | Size: ~15 KB | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
+        <p><small>Released: December 6, 2025 | Size: ~6.4 MB | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
+
+        <h2>🆕 What's New in v1.7.2</h2>
+        <div class="info">
+            <h3>Critical Bug Fix: Player Events Now Being Stored</h3>
+            <p><strong>The Problem:</strong> Player-connected and player-disconnected events were being sent to Takaro but NOT being stored in the database. This meant player tracking, activity history, and event-based modules didn't work for Astroneer servers.</p>
+
+            <p><strong>The Root Cause:</strong> Manual player events were sending data with inconsistent types compared to what getPlayers returns:</p>
+            <ul>
+                <li>getPlayers: <code>steamId=''</code>, <code>ip=''</code>, <code>ping=0</code></li>
+                <li>Manual events: <code>steamId=null</code>, <code>ip=null</code>, <code>ping=null</code></li>
+            </ul>
+
+            <p><strong>The Solution:</strong> v1.7.2 makes manual player events match the exact data structure that getPlayers returns. Now Takaro can properly validate and store player events.</p>
+
+            <p><strong>The Result:</strong> ✅ Player events now appear in Takaro dashboard<br>
+            ✅ Activity tracking works correctly<br>
+            ✅ Hooks and modules can respond to player join/leave events</p>
+        </div>
 
         <h2>⚡ Quick Start</h2>
         <ol>

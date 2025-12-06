@@ -2,6 +2,12 @@
 
 Connects your Astroneer dedicated server to Takaro using RCON. **No mods required.**
 
+## 🎉 Latest Version: v1.7.2
+
+**CRITICAL FIX:** Player events are now working! Download the [latest release](https://github.com/mad-001/takaro-astroneer-bridge/releases/latest) to get player-connected and player-disconnected events properly stored in Takaro.
+
+**What was fixed:** Manual player events now send data in the exact same format as `getPlayers` (using empty strings and 0 instead of null), allowing Takaro to properly validate and store the events. See [release notes](https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.7.2) for details.
+
 ---
 
 ## Installation
