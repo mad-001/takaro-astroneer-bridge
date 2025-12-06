@@ -381,7 +381,7 @@ async function handleTakaroRequest(message: any) {
             gameId: String(p.guid),
             name: String(p.name),
             platformId: `steam:${p.guid}`,
-            steamId: String(p.guid)
+            steamId: null
           }));
         } catch (error) {
           logger.error(`Failed to get players from RCON: ${error}`);
@@ -760,7 +760,7 @@ function connectToRcon() {
             gameId: String(player.guid),
             name: String(player.name),
             platformId: `steam:${player.guid}`,
-            steamId: String(player.guid)
+            steamId: null
           }
         });
       }
@@ -775,7 +775,7 @@ function connectToRcon() {
             gameId: String(player.guid),
             name: String(player.name),
             platformId: `steam:${player.guid}`,
-            steamId: String(player.guid)
+            steamId: null
           }
         });
       }
@@ -791,7 +791,7 @@ function connectToRcon() {
             gameId: String(player.guid),
             name: String(player.name),
             platformId: `steam:${player.guid}`,
-            steamId: String(player.guid)
+            steamId: null
           }
         });
       }
