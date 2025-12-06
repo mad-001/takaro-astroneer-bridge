@@ -380,10 +380,8 @@ async function handleTakaroRequest(message: any) {
           responsePayload = onlinePlayers.map((p: any) => ({
             gameId: String(p.guid),
             name: String(p.name),
-            platformId: `astroneer:${p.guid}`,
-            steamId: '',
-            ip: '',
-            ping: 0
+            platformId: `steam:${p.guid}`,
+            steamId: String(p.guid)
           }));
         } catch (error) {
           logger.error(`Failed to get players from RCON: ${error}`);
@@ -729,9 +727,7 @@ function connectToRcon() {
                     gameId: String(player.playerGuid),
                     name: String(player.playerName),
                     platformId: `astroneer:${player.playerGuid}`,
-                    steamId: '',
-                    ip: '',
-                    ping: 0
+                    steamId: null
                   }
                 });
               }
@@ -763,10 +759,8 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            platformId: `astroneer:${player.guid}`,
-            steamId: '',
-            ip: '',
-            ping: 0
+            platformId: `steam:${player.guid}`,
+            steamId: String(player.guid)
           }
         });
       }
@@ -780,10 +774,8 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            platformId: `astroneer:${player.guid}`,
-            steamId: '',
-            ip: '',
-            ping: 0
+            platformId: `steam:${player.guid}`,
+            steamId: String(player.guid)
           }
         });
       }
@@ -798,10 +790,8 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            platformId: `astroneer:${player.guid}`,
-            steamId: '',
-            ip: '',
-            ping: 0
+            platformId: `steam:${player.guid}`,
+            steamId: String(player.guid)
           }
         });
       }
