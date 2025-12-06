@@ -728,12 +728,10 @@ function connectToRcon() {
                   player: {
                     gameId: String(player.playerGuid),
                     name: String(player.playerName),
-                    steamId: null,
-                    epicOnlineServicesId: null,
-                    xboxLiveId: null,
                     platformId: `astroneer:${player.playerGuid}`,
-                    ip: null,
-                    ping: null
+                    steamId: '',
+                    ip: '',
+                    ping: 0
                   }
                 });
               }
@@ -765,12 +763,10 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            steamId: null,
-            epicOnlineServicesId: null,
-            xboxLiveId: null,
             platformId: `astroneer:${player.guid}`,
-            ip: null,
-            ping: null
+            steamId: '',
+            ip: '',
+            ping: 0
           }
         });
       }
@@ -784,12 +780,10 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            steamId: null,
-            epicOnlineServicesId: null,
-            xboxLiveId: null,
             platformId: `astroneer:${player.guid}`,
-            ip: null,
-            ping: null
+            steamId: '',
+            ip: '',
+            ping: 0
           }
         });
       }
@@ -804,12 +798,10 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            steamId: null,
-            epicOnlineServicesId: null,
-            xboxLiveId: null,
             platformId: `astroneer:${player.guid}`,
-            ip: null,
-            ping: null
+            steamId: '',
+            ip: '',
+            ping: 0
           }
         });
       }
