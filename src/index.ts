@@ -381,9 +381,11 @@ async function handleTakaroRequest(message: any) {
             gameId: String(p.guid),
             name: String(p.name),
             platformId: `astroneer:${p.guid}`,
-            steamId: '',
-            ip: '',
-            ping: 0
+            steamId: null,
+            epicOnlineServicesId: null,
+            xboxLiveId: null,
+            ip: null,
+            ping: null
           }));
         } catch (error) {
           logger.error(`Failed to get players from RCON: ${error}`);
@@ -573,6 +575,16 @@ async function handleTakaroRequest(message: any) {
       });
       return;
 
+    case 'listEntities':
+      // Return empty array - Astroneer doesn't support entity listing
+      responsePayload = [];
+      break;
+
+    case 'listBans':
+      // Return empty array - ban list not supported via RCON
+      responsePayload = [];
+      break;
+
     default:
       logger.warn(`Unknown action: ${action}`);
       responsePayload = { error: `Unknown action: ${action}` };
@@ -644,6 +656,7 @@ function sendGameEvent(eventType: string, data: any) {
   };
 
   logger.info(`Sending game event to Takaro: ${eventType}`);
+  logger.info(`Event data: ${JSON.stringify(data)}`);
   sendToTakaro(message);
 }
 
@@ -714,35 +727,6 @@ function connectToRcon() {
         clearTimeout(rconReconnectTimeout);
         rconReconnectTimeout = null;
       }
-
-      // Send player-connected events for players who are already online
-      // This handles the case where the bridge starts/restarts while players are in-game
-      setTimeout(async () => {
-        try {
-          const response = await rconClient.listPlayers();
-          if (response && response.playerInfo) {
-            for (const player of response.playerInfo) {
-              if (player.inGame && isConnectedToTakaro) {
-                logger.info(`Sending initial player-connected for: ${player.playerName} (${player.playerGuid})`);
-                sendGameEvent('player-connected', {
-                  player: {
-                    gameId: String(player.playerGuid),
-                    name: String(player.playerName),
-                    steamId: null,
-                    epicOnlineServicesId: null,
-                    xboxLiveId: null,
-                    platformId: `astroneer:${player.playerGuid}`,
-                    ip: null,
-                    ping: null
-                  }
-                });
-              }
-            }
-          }
-        } catch (error) {
-          logger.error(`Failed to send initial player events: ${error}`);
-        }
-      }, 3000); // Wait 3 seconds for Takaro connection to be ready
     });
 
     rconClient.on('disconnect', () => {
@@ -756,63 +740,20 @@ function connectToRcon() {
       isConnectedToRcon = false;
     });
 
-    // Player events
+    // Player events - For GENERIC game servers, Takaro auto-generates player-connected/
+    // player-disconnected events by polling getPlayers and detecting changes.
+    // Manual event sending is not needed and will be ignored.
     rconClient.on('playerjoin', (player: any) => {
-      logger.info(`Player joined: ${player.name} (${player.guid})`);
-
-      if (isConnectedToTakaro) {
-        sendGameEvent('player-connected', {
-          player: {
-            gameId: String(player.guid),
-            name: String(player.name),
-            steamId: null,
-            epicOnlineServicesId: null,
-            xboxLiveId: null,
-            platformId: `astroneer:${player.guid}`,
-            ip: null,
-            ping: null
-          }
-        });
-      }
+      logger.info(`Player joined: ${player.name} (${player.guid}) - Takaro will detect via getPlayers polling`);
     });
 
     rconClient.on('playerleft', (player: any) => {
-      logger.info(`Player left: ${player.name} (${player.guid})`);
-
-      if (isConnectedToTakaro) {
-        sendGameEvent('player-disconnected', {
-          player: {
-            gameId: String(player.guid),
-            name: String(player.name),
-            steamId: null,
-            epicOnlineServicesId: null,
-            xboxLiveId: null,
-            platformId: `astroneer:${player.guid}`,
-            ip: null,
-            ping: null
-          }
-        });
-      }
+      logger.info(`Player left: ${player.name} (${player.guid}) - Takaro will detect via getPlayers polling`);
     });
 
     rconClient.on('newplayer', (player: any) => {
       logger.info(`New player detected: ${player.name} (${player.guid})`);
-
-      // New players who are in-game should trigger a join event
-      if (player.inGame && isConnectedToTakaro) {
-        sendGameEvent('player-connected', {
-          player: {
-            gameId: String(player.guid),
-            name: String(player.name),
-            steamId: null,
-            epicOnlineServicesId: null,
-            xboxLiveId: null,
-            platformId: `astroneer:${player.guid}`,
-            ip: null,
-            ping: null
-          }
-        });
-      }
+      // Takaro will detect new players via getPlayers polling
     });
 
     rconClient.on('save', () => {
