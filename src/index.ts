@@ -706,7 +706,7 @@ function connectToRcon() {
     });
 
     // Connection events
-    rconClient.on('connected', () => {
+    rconClient.on('connected', async () => {
       logger.info('Connected to Astroneer RCON');
       isConnectedToRcon = true;
       rconReconnectAttempts = 0;
@@ -714,6 +714,35 @@ function connectToRcon() {
         clearTimeout(rconReconnectTimeout);
         rconReconnectTimeout = null;
       }
+
+      // Send player-connected events for players who are already online
+      // This handles the case where the bridge starts/restarts while players are in-game
+      setTimeout(async () => {
+        try {
+          const response = await rconClient.listPlayers();
+          if (response && response.playerInfo) {
+            for (const player of response.playerInfo) {
+              if (player.inGame && isConnectedToTakaro) {
+                logger.info(`Sending initial player-connected for: ${player.playerName} (${player.playerGuid})`);
+                sendGameEvent('player-connected', {
+                  player: {
+                    gameId: String(player.playerGuid),
+                    name: String(player.playerName),
+                    steamId: null,
+                    epicOnlineServicesId: null,
+                    xboxLiveId: null,
+                    platformId: `astroneer:${player.playerGuid}`,
+                    ip: null,
+                    ping: null
+                  }
+                });
+              }
+            }
+          }
+        } catch (error) {
+          logger.error(`Failed to send initial player events: ${error}`);
+        }
+      }, 3000); // Wait 3 seconds for Takaro connection to be ready
     });
 
     rconClient.on('disconnect', () => {
