@@ -380,9 +380,10 @@ async function handleTakaroRequest(message: any) {
           responsePayload = onlinePlayers.map((p: any) => ({
             gameId: String(p.guid),
             name: String(p.name),
-            platformId: `steam:${p.guid}`,
-            steamId: null
+            platformId: `astroneer:${p.guid}`,
+            steamId: String(p.guid)
           }));
+
         } catch (error) {
           logger.error(`Failed to get players from RCON: ${error}`);
           responsePayload = [];
@@ -630,18 +631,36 @@ function sendToTakaro(message: any) {
 }
 
 /**
- * Send a game event to Takaro
+ * Send a game event to Takaro via WebSocket
+ * Sends as a request to create an event with player identification data
  */
 function sendGameEvent(eventType: string, data: any) {
+  if (!isConnectedToTakaro) {
+    logger.warn(`Cannot send event ${eventType} - not connected to Takaro`);
+    return;
+  }
+
+  // Log player info if available
+  const playerInfo = data.player ? ` (player: ${data.player.name} / ${data.player.gameId})` : '';
+  logger.info(`Sending game event via WebSocket: ${eventType}${playerInfo}`);
+
+  // Generate a request ID
+  const requestId = `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  // Try sending as a 'createEvent' request that Takaro might handle
   const message = {
-    type: 'gameEvent',
+    type: 'request',
+    requestId: requestId,
     payload: {
-      type: eventType,
-      data: data
+      action: 'createEvent',
+      args: {
+        eventName: eventType,
+        player: data.player,
+        meta: data
+      }
     }
   };
 
-  logger.info(`Sending game event to Takaro: ${eventType}`);
   sendToTakaro(message);
 }
 
@@ -717,17 +736,17 @@ function connectToRcon() {
       // This handles the case where the bridge starts/restarts while players are in-game
       setTimeout(async () => {
         try {
-          const response = await rconClient.listPlayers();
-          if (response && response.playerInfo) {
-            for (const player of response.playerInfo) {
+          const players = await rconClient.listPlayers();
+          if (players && Array.isArray(players)) {
+            for (const player of players) {
               if (player.inGame && isConnectedToTakaro) {
-                logger.info(`Sending initial player-connected for: ${player.playerName} (${player.playerGuid})`);
+                logger.info(`Sending initial player-connected for: ${player.name} (${player.guid})`);
                 sendGameEvent('player-connected', {
                   player: {
-                    gameId: String(player.playerGuid),
-                    name: String(player.playerName),
-                    platformId: `astroneer:${player.playerGuid}`,
-                    steamId: null
+                    gameId: String(player.guid),
+                    name: String(player.name),
+                    platformId: `astroneer:${player.guid}`,
+                    steamId: String(player.guid)
                   }
                 });
               }
@@ -759,8 +778,8 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            platformId: `steam:${player.guid}`,
-            steamId: null
+            platformId: `astroneer:${player.guid}`,
+            steamId: String(player.guid)
           }
         });
       }
@@ -774,8 +793,8 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            platformId: `steam:${player.guid}`,
-            steamId: null
+            platformId: `astroneer:${player.guid}`,
+            steamId: String(player.guid)
           }
         });
       }
@@ -790,8 +809,8 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            platformId: `steam:${player.guid}`,
-            steamId: null
+            platformId: `astroneer:${player.guid}`,
+            steamId: String(player.guid)
           }
         });
       }

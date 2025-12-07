@@ -2,11 +2,15 @@
 
 Connects your Astroneer dedicated server to Takaro using RCON. **No mods required.**
 
-## 🎉 Latest Version: v1.7.2
+## 🎉 Latest Version: v1.10.0
 
-**CRITICAL FIX:** Player events are now working! Download the [latest release](https://github.com/mad-001/takaro-astroneer-bridge/releases/latest) to get player-connected and player-disconnected events properly stored in Takaro.
+**Player Events Now Working!** This version works with the new **Astroneer Player Event Generator** module that automatically creates player-connected and player-disconnected events in Takaro.
 
-**What was fixed:** Manual player events now send data in the exact same format as `getPlayers` (using empty strings and 0 instead of null), allowing Takaro to properly validate and store the events. See [release notes](https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.7.2) for details.
+**How it works:**
+- The bridge reports online players via `getPlayers` responses
+- Takaro tracks player online status automatically
+- A Takaro module monitors status changes and generates events every minute
+- Your Discord notifications and other hooks work perfectly!
 
 ---
 
@@ -67,6 +71,23 @@ You should see:
 ```
 
 **Done!** Your server is now connected to Takaro.
+
+### Step 6: Install the Player Event Generator Module
+
+To get player connect/disconnect events working:
+
+1. Go to your [Takaro Dashboard](https://app.takaro.io/)
+2. Navigate to **Modules** → **Browse Modules**
+3. Find and install **"Astroneer Player Event Generator"** by Claude
+4. Select your Astroneer server and click **Install**
+
+This module will automatically:
+- Monitor player online status changes
+- Create player-connected events when players join
+- Create player-disconnected events when players leave
+- Trigger your Discord notifications and other hooks
+
+**Note:** Events are detected every minute (there may be up to 60 seconds delay).
 
 ---
 
