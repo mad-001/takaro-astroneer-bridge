@@ -21,6 +21,8 @@ cp rcon-console.js "release/astroneer bridge/"
 cp rcon-console.bat "release/astroneer bridge/"
 cp QUICK_START.txt "release/astroneer bridge/"
 cp README.md "release/astroneer bridge/"
+cp References.md "release/astroneer bridge/"
+cp RELEASE_NOTES_v1.10.1.md "release/astroneer bridge/"
 
 # Create zip
 cd release
