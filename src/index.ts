@@ -188,8 +188,11 @@ const logger = winston.createLogger({
 
 // Configuration
 const TAKARO_WS_URL = 'wss://connect.takaro.io/';
+const TAKARO_API_URL = 'https://api.takaro.io';
 const IDENTITY_TOKEN = process.env.IDENTITY_TOKEN || '';
 const REGISTRATION_TOKEN = process.env.REGISTRATION_TOKEN || '';
+const API_TOKEN = process.env.API_TOKEN || ''; // Takaro API Bearer token for REST API
+const GAME_SERVER_ID = '0af9a1dc-d6bd-4b4b-8009-771e3afe23d8'; // Astroneer server ID
 const HTTP_PORT = parseInt(process.env.HTTP_PORT || '3000', 10);
 
 // RCON Configuration
@@ -380,8 +383,7 @@ async function handleTakaroRequest(message: any) {
           responsePayload = onlinePlayers.map((p: any) => ({
             gameId: String(p.guid),
             name: String(p.name),
-            platformId: `astroneer:${p.guid}`,
-            steamId: String(p.guid)
+            platformId: `astroneer:${p.guid}`
           }));
 
         } catch (error) {
@@ -549,18 +551,9 @@ async function handleTakaroRequest(message: any) {
       break;
 
     case 'getPlayerLocation':
-      // Queue for Lua mod
-      if (args) {
-        const locArgs = typeof args === 'string' ? JSON.parse(args) : args;
-        pendingCommands.push({
-          requestId,
-          action,
-          args: locArgs
-        });
-        return;
-      } else {
-        responsePayload = { x: 0, y: 0, z: 0 };
-      }
+      // Astroneer doesn't support real-time location tracking
+      // Send dummy location to allow event processing to continue
+      responsePayload = { x: 0, y: 0, z: 0 };
       break;
 
     case 'listItems':
@@ -613,6 +606,12 @@ function sendToTakaro(message: any) {
 
   try {
     const jsonMessage = JSON.stringify(message);
+
+    // Debug logging for gameEvent messages
+    if (message.type === 'gameEvent') {
+      logger.info(`DEBUG: Sending gameEvent JSON: ${jsonMessage}`);
+    }
+
     takaroWs.send(jsonMessage);
 
     if (message.type === 'response') {
@@ -644,24 +643,108 @@ function sendGameEvent(eventType: string, data: any) {
   const playerInfo = data.player ? ` (player: ${data.player.name} / ${data.player.gameId})` : '';
   logger.info(`Sending game event via WebSocket: ${eventType}${playerInfo}`);
 
-  // Generate a request ID
-  const requestId = `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  // Use Eco's working format: type: 'gameEvent' with nested payload
+  // Only include fields that are actually provided (omit null/undefined)
+  const cleanPlayer: any = {};
+  if (data.player) {
+    if (data.player.gameId) cleanPlayer.gameId = data.player.gameId;
+    if (data.player.name) cleanPlayer.name = data.player.name;
+    if (data.player.platformId) cleanPlayer.platformId = data.player.platformId;
+    if (data.player.steamId) cleanPlayer.steamId = data.player.steamId;
+    if (data.player.epicOnlineServicesId) cleanPlayer.epicOnlineServicesId = data.player.epicOnlineServicesId;
+    if (data.player.xboxLiveId) cleanPlayer.xboxLiveId = data.player.xboxLiveId;
+    if (data.player.ip) cleanPlayer.ip = data.player.ip;
+    if (data.player.ping !== undefined && data.player.ping !== null) cleanPlayer.ping = data.player.ping;
+  }
 
-  // Try sending as a 'createEvent' request that Takaro might handle
   const message = {
-    type: 'request',
-    requestId: requestId,
+    type: 'gameEvent',
     payload: {
-      action: 'createEvent',
-      args: {
-        eventName: eventType,
-        player: data.player,
-        meta: data
+      type: eventType,
+      data: {
+        player: cleanPlayer
       }
     }
   };
 
   sendToTakaro(message);
+}
+
+/**
+ * Create event via Takaro REST API
+ * This is more reliable than WebSocket gameEvent messages
+ */
+async function createEventViaAPI(eventType: string, data: any) {
+  try {
+    const playerInfo = data.player ? ` (player: ${data.player.name} / ${data.player.gameId})` : '';
+    logger.info(`Creating event via API: ${eventType}${playerInfo}`);
+
+    // First, find the player's Takaro ID by searching for them
+    const searchUrl = `${TAKARO_API_URL}/gameserver/player/search`;
+    const searchResponse = await fetch(searchUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_TOKEN}`
+      },
+      body: JSON.stringify({
+        filters: {
+          gameServerId: [GAME_SERVER_ID],
+          gameId: [data.player.gameId]
+        }
+      })
+    });
+
+    if (!searchResponse.ok) {
+      logger.error(`Failed to search for player: ${searchResponse.status} ${searchResponse.statusText}`);
+      return;
+    }
+
+    const searchData: any = await searchResponse.json();
+
+    let playerId: string;
+    if (searchData.data && searchData.data.length > 0) {
+      // Player exists, use their ID
+      playerId = searchData.data[0].playerId;
+      logger.info(`Found existing player: ${playerId}`);
+    } else {
+      logger.warn(`Player ${data.player.name} not found in Takaro - event will be created without playerId`);
+      // We'll create the event without a playerId - Takaro might auto-create the player
+      playerId = null as any;
+    }
+
+    // Create the event
+    const eventUrl = `${TAKARO_API_URL}/event`;
+    const eventResponse = await fetch(eventUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${API_TOKEN}`
+      },
+      body: JSON.stringify({
+        eventName: eventType,
+        gameserverId: GAME_SERVER_ID,
+        playerId: playerId,
+        meta: {
+          source: 'astroneer-bridge',
+          timestamp: new Date().toISOString(),
+          player: data.player
+        }
+      })
+    });
+
+    if (!eventResponse.ok) {
+      const errorText = await eventResponse.text();
+      logger.error(`Failed to create event: ${eventResponse.status} ${errorText}`);
+      return;
+    }
+
+    const eventData: any = await eventResponse.json();
+    logger.info(`Event created successfully: ${eventData.data.id}`);
+
+  } catch (error: any) {
+    logger.error(`Error creating event via API: ${error.message}`);
+  }
 }
 
 /**
@@ -745,8 +828,7 @@ function connectToRcon() {
                   player: {
                     gameId: String(player.guid),
                     name: String(player.name),
-                    platformId: `astroneer:${player.guid}`,
-                    steamId: String(player.guid)
+                    platformId: `astroneer:${player.guid}`
                   }
                 });
               }
@@ -778,8 +860,7 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            platformId: `astroneer:${player.guid}`,
-            steamId: String(player.guid)
+            platformId: `astroneer:${player.guid}`
           }
         });
       }
@@ -793,8 +874,7 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            platformId: `astroneer:${player.guid}`,
-            steamId: String(player.guid)
+            platformId: `astroneer:${player.guid}`
           }
         });
       }
@@ -809,8 +889,7 @@ function connectToRcon() {
           player: {
             gameId: String(player.guid),
             name: String(player.name),
-            platformId: `astroneer:${player.guid}`,
-            steamId: String(player.guid)
+            platformId: `astroneer:${player.guid}`
           }
         });
       }
@@ -878,7 +957,7 @@ app.get('/health', (req, res) => {
  * POST /event
  * Body: { type: "player-connected", data: {...} }
  */
-app.post('/event', (req, res) => {
+app.post('/event', async (req, res) => {
   const { type, data } = req.body;
 
   if (!type) {
@@ -889,13 +968,13 @@ app.post('/event', (req, res) => {
   metrics.eventsReceived++;
   logger.info(`Received event from Lua: ${type}`);
 
-  if (isConnectedToTakaro) {
-    sendGameEvent(type, data || {});
+  try {
+    await createEventViaAPI(type, data || {});
     res.json({ success: true });
-  } else {
+  } catch (error: any) {
     metrics.errors++;
-    logger.warn('Not connected to Takaro, event dropped');
-    res.status(503).json({ error: 'Not connected to Takaro' });
+    logger.error(`Failed to create event: ${error.message}`);
+    res.status(500).json({ error: 'Failed to create event' });
   }
 });
 
