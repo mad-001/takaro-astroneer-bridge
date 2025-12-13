@@ -184,34 +184,36 @@
         </div>
 
         <div class="info">
-            <strong>🎉 v1.11.0 - PLAYER EVENTS FIXED!</strong><br>
-            Player connect/disconnect events now work instantly via WebSocket! Critical bugs fixed for real-time event delivery.
+            <strong>🎉 v1.11.1 - SERVER STATUS DETECTION FIXED!</strong><br>
+            Server status now accurately reflects Astroneer state. Player events remain reliable and instant!
         </div>
 
         <h2>📥 Download</h2>
-        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.11.0" class="download-btn">
-            🌟 Download Latest Version (v1.11.0) 🌟
+        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.11.1" class="download-btn">
+            🌟 Download Latest Version (v1.11.1) 🌟
         </a>
-        <p><small>Released: December 10, 2025 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
+        <p><small>Released: December 13, 2025 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
 
-        <h2>🆕 What's New in v1.11.0</h2>
+        <h2>🆕 What's New in v1.11.1</h2>
         <div class="info">
-            <h3>Critical Bug Fixes - Events Now Work Instantly!</h3>
-            <p><strong>The Problem:</strong> Events were being sent but silently dropped by Takaro due to two critical bugs:</p>
+            <h3>Fixed Server Status Detection</h3>
+            <p><strong>The Problem:</strong> Takaro showed server as online even when Astroneer was offline. The bridge maintained WebSocket connection while RCON was down.</p>
 
-            <p><strong>Bug Fix #1 - Null Values in Optional Fields:</strong></p>
-            <p>The bridge was sending <code>null</code> for optional fields like <code>epicOnlineServicesId</code> and <code>ip</code>. Takaro's strict validation rejects null values - optional fields must be completely omitted instead.</p>
+            <p><strong>Bug Fix #1 - testReachability Always True:</strong></p>
+            <p>The <code>testReachability</code> handler always returned <code>connectable: true</code> regardless of actual RCON status. Now checks <code>isConnectedToRcon</code> and returns accurate status.</p>
 
-            <p><strong>Bug Fix #2 - getPlayerLocation Hanging:</strong></p>
-            <p>During event processing, Takaro requests player location. The bridge was queuing this request without responding, causing event processing to hang indefinitely.</p>
+            <p><strong>Bug Fix #2 - getPlayers Silent Failures:</strong></p>
+            <p>When RCON disconnected, <code>getPlayers</code> returned empty array instead of error. Takaro interpreted this as "server online, no players". Now throws error when RCON disconnected to trigger unreachable status.</p>
+
+            <p><strong>Bug Fix #3 - Event Processing Breakage:</strong></p>
+            <p>Initial fix was too aggressive - threw errors on transient RCON hiccups, breaking player connect/disconnect events. Now distinguishes between transient errors (returns empty array) and definitive disconnect (throws error).</p>
 
             <p><strong>The Result:</strong></p>
             <ol>
-                <li>✅ Events delivered via WebSocket <code>gameEvent</code> messages (no module needed!)</li>
-                <li>✅ Instant event delivery (< 1 second latency)</li>
-                <li>✅ 100% reliability - events always created</li>
-                <li>✅ Hooks and Discord notifications work immediately</li>
-                <li>✅ Simpler architecture - just the bridge, no Takaro module required</li>
+                <li>✅ Server status accurately reflects Astroneer state</li>
+                <li>✅ Takaro shows "unreachable" when Astroneer goes offline</li>
+                <li>✅ Player events still work reliably and instantly</li>
+                <li>✅ No false negatives from temporary RCON errors</li>
             </ol>
 
         </div>
