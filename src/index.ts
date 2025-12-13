@@ -360,10 +360,10 @@ async function handleTakaroRequest(message: any) {
 
   switch (action) {
     case 'testReachability':
-      // Match Eco's response format exactly
+      // Check if RCON is actually connected to the game server
       responsePayload = {
-        connectable: true,
-        reason: null
+        connectable: isConnectedToRcon,
+        reason: isConnectedToRcon ? null : 'RCON connection lost'
       };
       break;
 
@@ -391,7 +391,8 @@ async function handleTakaroRequest(message: any) {
           responsePayload = [];
         }
       } else {
-        responsePayload = [];
+        logger.error('getPlayers called but RCON is not connected');
+        throw new Error('RCON connection lost - cannot retrieve player list');
       }
       break;
 
