@@ -2,9 +2,11 @@
 
 Connects your Astroneer dedicated server to Takaro using RCON. **No mods required.**
 
-## 🎉 Latest Version: v1.11.2
+## 🎉 Latest Version: v1.11.3
 
-**New in v1.11.2:** Proper server shutdown handling! When using Takaro's `serverShutdown` command, the bridge now waits 20 seconds then forcefully kills Astroneer processes, allowing clean restarts without orphaned processes.
+**New in v1.11.3:** Window auto-closes when bridge stops - no more orphaned command windows!
+
+**In v1.11.2:** Proper server shutdown handling! When using Takaro's `serverShutdown` command, the bridge now waits 20 seconds then forcefully kills Astroneer processes, allowing clean restarts without orphaned processes.
 
 **Player Events Working!** This version works with the new **Astroneer Player Event Generator** module that automatically creates player-connected and player-disconnected events in Takaro.
 

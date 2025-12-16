@@ -54,4 +54,5 @@ echo Starting bridge server...
 echo --------------------------------------------------------
 node dist/index.js
 
-pause
+REM Exit and close window when node stops
+exit
