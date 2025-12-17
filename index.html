@@ -184,17 +184,42 @@
         </div>
 
         <div class="info">
-            <strong>🎉 v1.11.4 - SHUTDOWN COMMAND FIX!</strong><br>
-            Fixed critical bug where shutdown commands broke all bridge functionality. Player events are fully operational!
+            <strong>🎉 v1.11.5 - DISCORD EVENTS WORKING!</strong><br>
+            Fixed event format! Discord notifications and all event-triggered hooks now work correctly again.
         </div>
 
         <h2>📥 Download</h2>
-        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.11.4" class="download-btn">
-            🌟 Download Latest Version (v1.11.4) 🌟
+        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.11.5" class="download-btn">
+            🌟 Download Latest Version (v1.11.5) 🌟
         </a>
         <p><small>Released: December 17, 2025 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
 
-        <h2>🆕 What's New in v1.11.4</h2>
+        <h2>🆕 What's New in v1.11.5</h2>
+        <div class="info">
+            <h3>Critical Fix - Event Format Restored</h3>
+            <p><strong>The Problem:</strong> Events were being sent with the wrong format (<code>type: 'request'</code>) instead of the correct <code>type: 'gameEvent'</code> format. This caused Takaro to ignore all events, breaking Discord notifications and event-triggered hooks.</p>
+
+            <p><strong>The Fix:</strong></p>
+            <ul>
+                <li>Restored v1.11.1's working event format</li>
+                <li>Events now use <code>type: 'gameEvent'</code> as expected by Takaro</li>
+                <li>Discord notifications work again</li>
+                <li>All hooks and modules triggered by player events now function correctly</li>
+            </ul>
+
+            <p><strong>Combined with v1.11.4:</strong> Shutdown commands work reliably AND events trigger properly!</p>
+        </div>
+
+        <h2>📜 Previous Updates</h2>
+        <details>
+            <summary><strong>v1.11.4 - Shutdown Command Fix</strong></summary>
+            <div class="info" style="margin-top: 15px;">
+                <h3>Fixed Shutdown Breaking Bridge</h3>
+                <p>Server shutdown commands no longer break the bridge. Shutdown executes asynchronously and RCON auto-reconnects.</p>
+            </div>
+        </details>
+        <details>
+            <summary><strong>v1.11.0-v1.11.3 - Click to expand</strong></summary>
         <div class="info">
             <h3>Critical Bug Fix - Shutdown Command No Longer Breaks Bridge</h3>
             <p><strong>The Problem:</strong> In v1.11.2-v1.11.3, server shutdown commands would wait for RCON response, but the server would disconnect before responding. This caused errors that broke all subsequent bridge operations including player events.</p>
