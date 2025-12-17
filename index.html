@@ -184,33 +184,55 @@
         </div>
 
         <div class="info">
-            <strong>🎉 v1.11.8 - STABLE RELEASE!</strong><br>
-            All features working: Player events, Discord notifications, server shutdown, and full RCON command support.
+            <strong>🚀 v1.11.9 - OPTIMIZED & MORE RELIABLE!</strong><br>
+            Enhanced error handling, improved performance, player data validation - all features working perfectly!
         </div>
 
         <h2>📥 Download</h2>
-        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.11.8" class="download-btn">
-            🌟 Download Latest Version (v1.11.8) 🌟
+        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.11.9" class="download-btn">
+            🌟 Download Latest Version (v1.11.9) 🌟
         </a>
         <p><small>Released: December 17, 2025 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
 
-        <h2>🆕 What's New in v1.11.8</h2>
+        <h2>🆕 What's New in v1.11.9</h2>
         <div class="info">
-            <h3>Stable Release - All Features Working</h3>
-            <p><strong>This release adds debug logging and confirms all features are operational:</strong></p>
+            <h3>Code Optimization & Reliability Improvements</h3>
+            <p><strong>This release focuses on code quality, error handling, and long-term reliability:</strong></p>
 
+            <h4>Performance & Code Quality</h4>
             <ul>
-                <li>✅ Real-time player connect/disconnect events</li>
-                <li>✅ Discord notifications (< 1 second latency)</li>
-                <li>✅ Server shutdown command working correctly</li>
-                <li>✅ Full RCON command support</li>
-                <li>✅ Debug logging for troubleshooting command issues</li>
+                <li>Move imports to top level for better performance</li>
+                <li>Fix HTTP_PORT default to match documentation (3535)</li>
+                <li>Add version tracking and startup logging</li>
+                <li>Remove unused code and optimize structure</li>
             </ul>
 
-            <p><strong>Recommended for all users.</strong> This is the most stable version with all features tested and working.</p>
+            <h4>Error Handling & Validation</h4>
+            <ul>
+                <li>Player data validation in all RCON event handlers</li>
+                <li>Comprehensive error tracking with metrics</li>
+                <li>Max reconnect attempts (100) to prevent infinite loops</li>
+                <li>Better error messages and logging throughout</li>
+            </ul>
+
+            <h4>All Features Still Working Perfectly</h4>
+            <ul>
+                <li>✅ Real-time player events (< 1s latency)</li>
+                <li>✅ Discord notifications</li>
+                <li>✅ Server shutdown with force-kill fallback</li>
+                <li>✅ Full RCON command support</li>
+            </ul>
+
+            <p><strong>Recommended for all users.</strong> More reliable and better error handling than v1.11.8.</p>
         </div>
 
         <h2>📜 Previous Updates</h2>
+        <details>
+            <summary><strong>v1.11.8 - Stable Release (superseded)</strong></summary>
+            <div class="info" style="margin-top: 15px;">
+                <p>Added debug logging and confirmed all features working. Superseded by v1.11.9's reliability improvements.</p>
+            </div>
+        </details>
         <details>
             <summary><strong>v1.11.7 - Event Processing Fix</strong></summary>
             <div class="info" style="margin-top: 15px;">
