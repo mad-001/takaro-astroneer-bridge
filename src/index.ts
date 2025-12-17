@@ -358,10 +358,10 @@ async function handleTakaroRequest(message: any) {
 
   switch (action) {
     case 'testReachability':
-      // Match Eco's response format exactly
+      // Check if RCON is actually connected to the game server
       responsePayload = {
-        connectable: true,
-        reason: null
+        connectable: isConnectedToRcon,
+        reason: isConnectedToRcon ? null : 'RCON connection lost - server may be offline'
       };
       break;
 
