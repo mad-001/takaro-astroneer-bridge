@@ -680,7 +680,7 @@ function sendToTakaro(message) {
 }
 /**
  * Send a game event to Takaro via WebSocket
- * Sends as a request to create an event with player identification data
+ * Uses the gameEvent format that worked in v1.11.1
  */
 function sendGameEvent(eventType, data) {
     if (!isConnectedToTakaro) {
@@ -690,18 +690,33 @@ function sendGameEvent(eventType, data) {
     // Log player info if available
     const playerInfo = data.player ? ` (player: ${data.player.name} / ${data.player.gameId})` : '';
     logger.info(`Sending game event via WebSocket: ${eventType}${playerInfo}`);
-    // Generate a request ID
-    const requestId = `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    // Try sending as a 'createEvent' request that Takaro might handle
+    // Use Eco's working format: type: 'gameEvent' with nested payload
+    // Only include fields that are actually provided (omit null/undefined)
+    const cleanPlayer = {};
+    if (data.player) {
+        if (data.player.gameId)
+            cleanPlayer.gameId = data.player.gameId;
+        if (data.player.name)
+            cleanPlayer.name = data.player.name;
+        if (data.player.platformId)
+            cleanPlayer.platformId = data.player.platformId;
+        if (data.player.steamId)
+            cleanPlayer.steamId = data.player.steamId;
+        if (data.player.epicOnlineServicesId)
+            cleanPlayer.epicOnlineServicesId = data.player.epicOnlineServicesId;
+        if (data.player.xboxLiveId)
+            cleanPlayer.xboxLiveId = data.player.xboxLiveId;
+        if (data.player.ip)
+            cleanPlayer.ip = data.player.ip;
+        if (data.player.ping !== undefined && data.player.ping !== null)
+            cleanPlayer.ping = data.player.ping;
+    }
     const message = {
-        type: 'request',
-        requestId: requestId,
+        type: 'gameEvent',
         payload: {
-            action: 'createEvent',
-            args: {
-                eventName: eventType,
-                player: data.player,
-                meta: data
+            type: eventType,
+            data: {
+                player: cleanPlayer
             }
         }
     };
