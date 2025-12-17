@@ -604,19 +604,9 @@ async function handleTakaroRequest(message) {
             }
             break;
         case 'getPlayerLocation':
-            // Queue for Lua mod
-            if (args) {
-                const locArgs = typeof args === 'string' ? JSON.parse(args) : args;
-                pendingCommands.push({
-                    requestId,
-                    action,
-                    args: locArgs
-                });
-                return;
-            }
-            else {
-                responsePayload = { x: 0, y: 0, z: 0 };
-            }
+            // Astroneer doesn't support real-time location tracking
+            // Send dummy location to allow event processing to continue
+            responsePayload = { x: 0, y: 0, z: 0 };
             break;
         case 'listItems':
             // Queue for Lua mod
