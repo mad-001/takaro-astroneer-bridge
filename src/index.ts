@@ -3,8 +3,16 @@ import WebSocket from 'ws';
 import winston from 'winston';
 import * as fs from 'fs';
 import * as path from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 // @ts-ignore - No types available for astroneer-rcon-client
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
+
+// Version
+const VERSION = '1.11.9';
+
+// Promisified exec for shutdown operations
+const execPromise = promisify(exec);
 
 // Load configuration from TakaroConfig.txt
 function loadConfig() {
@@ -191,7 +199,7 @@ const logger = winston.createLogger({
 const TAKARO_WS_URL = 'wss://connect.takaro.io/';
 const IDENTITY_TOKEN = process.env.IDENTITY_TOKEN || '';
 const REGISTRATION_TOKEN = process.env.REGISTRATION_TOKEN || '';
-const HTTP_PORT = parseInt(process.env.HTTP_PORT || '3000', 10);
+const HTTP_PORT = parseInt(process.env.HTTP_PORT || '3535', 10);
 
 // RCON Configuration
 const RCON_HOST = process.env.RCON_HOST || '127.0.0.1';
@@ -210,14 +218,16 @@ let rconReconnectTimeout: NodeJS.Timeout | null = null;
 
 // Pending requests (for request/response pattern)
 const pendingRequests = new Map<string, (response: any) => void>();
-const requestTimeouts = new Map<string, NodeJS.Timeout>();
-const REQUEST_TIMEOUT_MS = 30000; // 30 seconds
+
+// Pending commands for Lua mod (if ever needed)
+const pendingCommands: any[] = [];
 
 // Reconnection state
 let reconnectAttempts = 0;
 const MAX_RECONNECT_DELAY = 60000; // 60 seconds
 const BASE_RECONNECT_DELAY = 3000; // 3 seconds
 let rconReconnectAttempts = 0;
+const MAX_RCON_RECONNECT_ATTEMPTS = 100; // Stop after 100 failed attempts
 const RCON_RECONNECT_DELAY = 5000; // 5 seconds
 
 // Metrics
@@ -254,6 +264,7 @@ function connectToTakaro() {
       const message = JSON.parse(data.toString());
       handleTakaroMessage(message);
     } catch (error) {
+      metrics.errors++;
       logger.error(`Failed to parse Takaro message: ${error}`);
     }
   });
@@ -452,10 +463,6 @@ async function handleTakaroRequest(message: any) {
               setTimeout(async () => {
                 logger.info('Forcefully terminating Astroneer server processes...');
                 try {
-                  const { exec } = require('child_process');
-                  const util = require('util');
-                  const execPromise = util.promisify(exec);
-
                   // Kill AstroServer.exe and any related processes
                   await execPromise('taskkill /F /IM AstroServer.exe /T').catch(() => {});
                   await execPromise('taskkill /F /IM AstroServer-Win64-Shipping.exe /T').catch(() => {});
@@ -470,13 +477,11 @@ async function handleTakaroRequest(message: any) {
                   }
                   isConnectedToRcon = false;
 
-                  // Schedule RCON reconnection for when server comes back
-                  setTimeout(() => {
-                    logger.info('Attempting to reconnect RCON...');
-                    connectToRcon();
-                  }, 5000);
+                  // Schedule RCON reconnection using the proper function
+                  scheduleRconReconnect();
 
                 } catch (error) {
+                  metrics.errors++;
                   logger.error(`Failed to kill Astroneer processes: ${error}`);
                 }
               }, 20000);
@@ -799,6 +804,12 @@ function connectToRcon() {
           const players = await rconClient.listPlayers();
           if (players && Array.isArray(players)) {
             for (const player of players) {
+              // Validate player data before sending event
+              if (!player || !player.guid || !player.name) {
+                logger.warn(`Skipping invalid player data: ${JSON.stringify(player)}`);
+                continue;
+              }
+
               if (player.inGame && isConnectedToTakaro) {
                 logger.info(`Sending initial player-connected for: ${player.name} (${player.guid})`);
                 sendGameEvent('player-connected', {
@@ -813,6 +824,7 @@ function connectToRcon() {
             }
           }
         } catch (error) {
+          metrics.errors++;
           logger.error(`Failed to send initial player events: ${error}`);
         }
       }, 3000); // Wait 3 seconds for Takaro connection to be ready
@@ -825,12 +837,19 @@ function connectToRcon() {
     });
 
     rconClient.on('error', (error: Error) => {
+      metrics.errors++;
       logger.error(`RCON error: ${error.message}`);
       isConnectedToRcon = false;
     });
 
     // Player events
     rconClient.on('playerjoin', (player: any) => {
+      if (!player || !player.guid || !player.name) {
+        logger.warn(`Invalid player join data: ${JSON.stringify(player)}`);
+        metrics.errors++;
+        return;
+      }
+
       logger.info(`Player joined: ${player.name} (${player.guid})`);
 
       if (isConnectedToTakaro) {
@@ -846,6 +865,12 @@ function connectToRcon() {
     });
 
     rconClient.on('playerleft', (player: any) => {
+      if (!player || !player.guid || !player.name) {
+        logger.warn(`Invalid player left data: ${JSON.stringify(player)}`);
+        metrics.errors++;
+        return;
+      }
+
       logger.info(`Player left: ${player.name} (${player.guid})`);
 
       if (isConnectedToTakaro) {
@@ -861,6 +886,12 @@ function connectToRcon() {
     });
 
     rconClient.on('newplayer', (player: any) => {
+      if (!player || !player.guid || !player.name) {
+        logger.warn(`Invalid new player data: ${JSON.stringify(player)}`);
+        metrics.errors++;
+        return;
+      }
+
       logger.info(`New player detected: ${player.name} (${player.guid})`);
 
       // New players who are in-game should trigger a join event
@@ -893,6 +924,13 @@ function connectToRcon() {
 function scheduleRconReconnect() {
   if (rconReconnectTimeout) {
     clearTimeout(rconReconnectTimeout);
+  }
+
+  // Check if we've exceeded max reconnect attempts
+  if (rconReconnectAttempts >= MAX_RCON_RECONNECT_ATTEMPTS) {
+    logger.error(`RCON reconnection failed after ${MAX_RCON_RECONNECT_ATTEMPTS} attempts. Giving up.`);
+    metrics.errors++;
+    return;
   }
 
   logger.info(`Scheduling RCON reconnection in ${RCON_RECONNECT_DELAY}ms...`);
@@ -963,8 +1001,6 @@ app.post('/event', (req, res) => {
  * Lua mod polls for pending commands/requests from Takaro
  * GET /poll
  */
-const pendingCommands: any[] = [];
-
 app.get('/poll', (req, res) => {
   if (pendingCommands.length > 0) {
     const command = pendingCommands.shift();
@@ -993,6 +1029,7 @@ app.post('/result', (req, res) => {
 
 // Start HTTP server
 app.listen(HTTP_PORT, '127.0.0.1', () => {
+  logger.info(`Takaro Astroneer Bridge v${VERSION} starting...`);
   logger.info(`HTTP API listening on http://127.0.0.1:${HTTP_PORT}`);
 });
 
