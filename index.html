@@ -184,17 +184,40 @@
         </div>
 
         <div class="info">
-            <strong>🎉 v1.11.7 - EVENTS FULLY FIXED!</strong><br>
-            Player events now work perfectly! Discord notifications, hooks, and all event-triggered actions working in real-time.
+            <strong>🎉 v1.11.8 - STABLE RELEASE!</strong><br>
+            All features working: Player events, Discord notifications, server shutdown, and full RCON command support.
         </div>
 
         <h2>📥 Download</h2>
-        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.11.7" class="download-btn">
-            🌟 Download Latest Version (v1.11.7) 🌟
+        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.11.8" class="download-btn">
+            🌟 Download Latest Version (v1.11.8) 🌟
         </a>
         <p><small>Released: December 17, 2025 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
 
-        <h2>🆕 What's New in v1.11.7</h2>
+        <h2>🆕 What's New in v1.11.8</h2>
+        <div class="info">
+            <h3>Stable Release - All Features Working</h3>
+            <p><strong>This release adds debug logging and confirms all features are operational:</strong></p>
+
+            <ul>
+                <li>✅ Real-time player connect/disconnect events</li>
+                <li>✅ Discord notifications (< 1 second latency)</li>
+                <li>✅ Server shutdown command working correctly</li>
+                <li>✅ Full RCON command support</li>
+                <li>✅ Debug logging for troubleshooting command issues</li>
+            </ul>
+
+            <p><strong>Recommended for all users.</strong> This is the most stable version with all features tested and working.</p>
+        </div>
+
+        <h2>📜 Previous Updates</h2>
+        <details>
+            <summary><strong>v1.11.7 - Event Processing Fix</strong></summary>
+            <div class="info" style="margin-top: 15px;">
+                <h3>Fixed Event Processing Hang</h3>
+                <p>Bridge now responds immediately to <code>getPlayerLocation</code> requests, allowing events to be created in the database.</p>
+            </div>
+        </details>
         <div class="info">
             <h3>Critical Fix - Event Processing No Longer Hangs</h3>
             <p><strong>The Problem:</strong> Events were being sent correctly, but Takaro's request for <code>getPlayerLocation</code> was being queued instead of answered immediately. This caused event processing to hang indefinitely, preventing events from being created in the database.</p>
