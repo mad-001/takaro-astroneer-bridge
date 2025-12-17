@@ -417,6 +417,7 @@ async function handleTakaroRequest(message: any) {
       if (args) {
         const cmdArgs = typeof args === 'string' ? JSON.parse(args) : args;
         const command = cmdArgs.command || '';
+        logger.info(`DEBUG: Received command: "${command}" from args: ${JSON.stringify(cmdArgs)}`);
 
         // Special handling for "help" command
         if (command.toLowerCase() === 'help') {
