@@ -2,23 +2,13 @@
 
 Connects your Astroneer dedicated server to Takaro using RCON. **No mods required.**
 
-## 🎉 Latest Version: v1.11.3
+## 🎉 Latest Version: v1.11.7
 
-**New in v1.11.3:** Window auto-closes when bridge stops - no more orphaned command windows!
-
-**In v1.11.2:** Proper server shutdown handling! When using Takaro's `serverShutdown` command, the bridge now waits 20 seconds then forcefully kills Astroneer processes, allowing clean restarts without orphaned processes.
-
-**Player Events Working!** This version works with the new **Astroneer Player Event Generator** module that automatically creates player-connected and player-disconnected events in Takaro.
-
-**How it works:**
-- The bridge reports online players via `getPlayers` responses
-- Takaro tracks player online status automatically
-- A Takaro module monitors status changes and generates events every minute
-- Your Discord notifications and other hooks work perfectly!
+**Real-time player events working perfectly!** Discord notifications and all hooks trigger within 1 second of players joining/leaving.
 
 ---
 
-## Installation
+## Quick Start
 
 ### Step 1: Install Node.js
 
@@ -29,30 +19,39 @@ winget install OpenJS.NodeJS.LTS
 
 **Or download:** https://nodejs.org/
 
-**Restart your computer after installing.**
+**⚠️ RESTART YOUR COMPUTER after installing!**
 
 ### Step 2: Download the Bridge
 
-Go to [Releases](https://github.com/mad-001/takaro-astroneer-bridge/releases) and download `takaro-astroneer-bridge-windows.zip`
+Go to [Releases](https://github.com/mad-001/takaro-astroneer-bridge/releases/latest) and download `takaro-astroneer-bridge-v1.11.7-windows.zip`
 
 Extract it anywhere on your PC.
 
-### Step 3: Enable RCON on Astroneer Server
+### Step 3: Install Dependencies
+
+Open PowerShell or Command Prompt in the extracted folder and run:
+```
+npm install
+```
+
+This will download all required packages (takes a few minutes).
+
+### Step 4: Enable RCON on Astroneer Server
 
 Edit this file on your Astroneer server:
 ```
 \astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini
 ```
 
-Add these two lines anywhere:
+Add these lines:
 ```ini
 ConsolePort=5000
 ConsolePassword=your-password-here
 ```
 
-Save and restart your Astroneer server.
+**Save and restart your Astroneer server.**
 
-### Step 4: Configure the Bridge
+### Step 5: Configure the Bridge
 
 Open `TakaroConfig.txt` in Notepad and edit:
 
@@ -62,9 +61,11 @@ REGISTRATION_TOKEN=get-this-from-takaro-dashboard
 RCON_PASSWORD=same-password-as-step-3
 ```
 
+**Get your REGISTRATION_TOKEN from:** Takaro Dashboard → Your Server → Settings → Connection Token
+
 Save the file.
 
-### Step 5: Start the Bridge
+### Step 6: Start the Bridge
 
 Double-click `start.bat`
 
@@ -72,66 +73,98 @@ You should see:
 ```
 ✓ Connected to Takaro WebSocket
 ✓ Connected to Astroneer RCON
+✓ HTTP API listening on http://127.0.0.1:3535
 ```
 
-**Done!** Your server is now connected to Takaro.
-
-### Step 6: Install the Player Event Generator Module
-
-To get player connect/disconnect events working:
-
-1. Go to your [Takaro Dashboard](https://app.takaro.io/)
-2. Navigate to **Modules** → **Browse Modules**
-3. Find and install **"Astroneer Player Event Generator"** by Claude
-4. Select your Astroneer server and click **Install**
-
-This module will automatically:
-- Monitor player online status changes
-- Create player-connected events when players join
-- Create player-disconnected events when players leave
-- Trigger your Discord notifications and other hooks
-
-**Note:** Events are detected every minute (there may be up to 60 seconds delay).
+**Done!** Your server is now connected to Takaro with real-time player events.
 
 ---
 
-## Stop the Bridge
+## Features
 
-Double-click `stop.bat`
+✅ **Real-time player events** - Connect/disconnect events within 1 second
+✅ **Discord notifications** - Instant notifications for player join/leave
+✅ **Full RCON support** - Execute any Astroneer server command
+✅ **Server management** - Kick, ban, unban players
+✅ **Auto-reconnect** - Automatically reconnects if connection drops
+✅ **Event hooks** - Trigger custom actions on player events
+
+---
+
+## Usage
+
+### Start the Bridge
+Double-click `start.bat` or run:
+```
+node dist/index.js
+```
+
+### Stop the Bridge
+Double-click `stop.bat` or press `Ctrl+C` in the terminal
+
+### Restart the Bridge
+Double-click `restart_bridge.vbs` for a clean restart
 
 ---
 
 ## Troubleshooting
 
-**"Publisher cannot be verified" security warning**
-- This is normal for downloaded files
-- Click **"More info"** then **"Run anyway"**
-- OR: Right-click start.bat → Properties → Check "Unblock" → Apply → OK
-
-**"node is not recognized"**
+### "node is not recognized"
 - Install Node.js from https://nodejs.org/
-- Restart your computer after installing
+- **Restart your computer** after installing
 
-**"RCON connection failed"**
-- Check that ConsolePort and ConsolePassword match in both files
-- Make sure Astroneer server is running
+### "Cannot find module"
+- Run `npm install` in the bridge folder
 
-**"Takaro connection failed"**
-- Check IDENTITY_TOKEN and REGISTRATION_TOKEN in TakaroConfig.txt
-- Get tokens from https://app.takaro.io/
+### "RCON connection failed"
+- Check that `RCON_PASSWORD` in TakaroConfig.txt matches your AstroServerSettings.ini
+- Make sure your Astroneer server is running
+- Verify ConsolePort is set to 5000 (or update RCON_PORT in TakaroConfig.txt)
+
+### "Takaro connection failed"
+- Check your `REGISTRATION_TOKEN` in TakaroConfig.txt
+- Get a new token from Takaro Dashboard → Your Server → Settings
+
+### Events not appearing in Discord
+- Make sure your Discord hook is configured in Takaro for player-connected/player-disconnected events
+- Check Takaro Dashboard → Events to verify events are being created
+- See bridge logs in `takaro-bridge.log` for debugging
 
 ---
 
-## What You Need
+## Getting Takaro Access
 
-- Astroneer Dedicated Server running
-- Node.js 18+
-- Takaro account at https://takaro.io
+Takaro is currently invite-only. To get access:
+
+1. Go to [Takaro.io](https://takaro.io) and complete the interest survey
+2. Join the [Takaro Discord server](https://discord.gg/takaro)
+3. Request an invite from the team
 
 ---
 
 ## Links
 
-- [Takaro Platform](https://takaro.io)
-- [Get Tokens](https://app.takaro.io/)
-- [Report Issues](https://github.com/mad-001/takaro-astroneer-bridge/issues)
+- **Documentation:** https://mad-001.github.io/takaro-astroneer-bridge/
+- **Report Issues:** https://github.com/mad-001/takaro-astroneer-bridge/issues
+- **Takaro Platform:** https://takaro.io
+- **Takaro Dashboard:** https://app.takaro.io
+
+---
+
+## Technical Details
+
+- **Bridge Type:** External WebSocket connector
+- **Connection:** WebSocket to wss://connect.takaro.io/
+- **RCON Protocol:** Native Astroneer RCON
+- **Event Latency:** < 1 second
+- **Supported Versions:** Node.js 18+
+
+---
+
+## License
+
+MIT License - See LICENSE file for details
+
+## Credits
+
+Developed with assistance from Claude Code
