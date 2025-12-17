@@ -94,16 +94,13 @@ You should see:
 ## Usage
 
 ### Start the Bridge
-Double-click `start.bat` or run:
-```
-node dist/index.js
-```
+Double-click `start.bat`
 
 ### Stop the Bridge
-Double-click `stop.bat` or press `Ctrl+C` in the terminal
+Double-click `stop.bat`
 
 ### Restart the Bridge
-Double-click `restart_bridge.vbs` for a clean restart
+Stop the bridge, then start it again
 
 ---
 

@@ -54,6 +54,12 @@
   - Usage documentation
   - Troubleshooting
 
+### Production Deployment
+- **Server Path**: `\\SERVER\GameServers\astroneer bridge`
+  - Bridge runs on Windows server machine
+  - Logs: `takaro-bridge.log` in root directory
+  - Control scripts: `start.bat`, `stop.bat`, `restart.bat`
+
 ## Key Differences: Eco vs Astroneer
 
 ### Eco Integration Architecture
