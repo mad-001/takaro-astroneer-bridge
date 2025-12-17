@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astroneer - Takaro Integration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #e0e0e0;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(30, 30, 40, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #a78bfa;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        h2 {
+            color: #c4b5fd;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        h3 {
+            color: #ddd6fe;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #9ca3af;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        .warning {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .info {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(167, 139, 250, 0.2);
+        }
+
+        .feature h3 {
+            margin-top: 0;
+            color: #a78bfa;
+        }
+
+        code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #fbbf24;
+        }
+
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: #e0e0e0;
+        }
+
+        ol, ul {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            color: #a78bfa;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #c4b5fd;
+            text-decoration: underline;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Astroneer - Takaro Integration</h1>
+        <p class="subtitle">Connect your Astroneer dedicated server to Takaro using native RCON. No mods required!</p>
+
+        <div class="info">
+            <strong>ℹ️ About Takaro</strong><br>
+            Takaro is a comprehensive game server management platform that provides powerful admin tools, moderation systems, player analytics, and automation features for game servers.
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ IMPORTANT</strong><br>
+            Takaro is currently invite-only. To get access:
+            <ol>
+                <li>Join the <a href="https://discord.gg/takaro" target="_blank">Takaro Discord server</a></li>
+                <li>Complete the interest survey</li>
+                <li>Request an invite from the team</li>
+            </ol>
+        </div>
+
+        <div class="info">
+            <strong>🎉 v1.11.4 - SHUTDOWN COMMAND FIX!</strong><br>
+            Fixed critical bug where shutdown commands broke all bridge functionality. Player events are fully operational!
+        </div>
+
+        <h2>📥 Download</h2>
+        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.11.4" class="download-btn">
+            🌟 Download Latest Version (v1.11.4) 🌟
+        </a>
+        <p><small>Released: December 17, 2025 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
+
+        <h2>🆕 What's New in v1.11.4</h2>
+        <div class="info">
+            <h3>Critical Bug Fix - Shutdown Command No Longer Breaks Bridge</h3>
+            <p><strong>The Problem:</strong> In v1.11.2-v1.11.3, server shutdown commands would wait for RCON response, but the server would disconnect before responding. This caused errors that broke all subsequent bridge operations including player events.</p>
+
+            <p><strong>The Fix:</strong></p>
+            <ul>
+                <li>Shutdown commands now respond immediately to Takaro</li>
+                <li>Server shutdown executes asynchronously without blocking</li>
+                <li>RCON auto-reconnects when server comes back online</li>
+                <li>Player connect/disconnect events work reliably again</li>
+            </ul>
+
+            <p><strong>Recommendation:</strong> If you're on v1.11.2 or v1.11.3, update immediately to restore full functionality.</p>
+        </div>
+
+        <h2>📜 Previous Updates</h2>
+        <details>
+            <summary><strong>v1.11.0-v1.11.3 - Click to expand</strong></summary>
+            <div class="info" style="margin-top: 15px;">
+                <h3>v1.11.0 - Player Events Fixed</h3>
+                <p>Player connect/disconnect events now work instantly via WebSocket! Critical bugs fixed for real-time event delivery.</p>
+            </div>
+        </details>
+
+        <h2>🔧 Technical Details (v1.11.0)</h2>
+        <div class="info">
+            <h3>Critical Bug Fixes - Events Now Work Instantly!</h3>
+            <p><strong>The Problem:</strong> Events were being sent but silently dropped by Takaro due to two critical bugs:</p>
+
+            <p><strong>Bug Fix #1 - Null Values in Optional Fields:</strong></p>
+            <p>The bridge was sending <code>null</code> for optional fields like <code>epicOnlineServicesId</code> and <code>ip</code>. Takaro's strict validation rejects null values - optional fields must be completely omitted instead.</p>
+
+            <p><strong>Bug Fix #2 - getPlayerLocation Hanging:</strong></p>
+            <p>During event processing, Takaro requests player location. The bridge was queuing this request without responding, causing event processing to hang indefinitely.</p>
+
+            <p><strong>The Result:</strong></p>
+            <ol>
+                <li>✅ Events delivered via WebSocket <code>gameEvent</code> messages (no module needed!)</li>
+                <li>✅ Instant event delivery (< 1 second latency)</li>
+                <li>✅ 100% reliability - events always created</li>
+                <li>✅ Hooks and Discord notifications work immediately</li>
+                <li>✅ Simpler architecture - just the bridge, no Takaro module required</li>
+            </ol>
+
+        </div>
+
+        <h2>⚡ Quick Start</h2>
+        <ol>
+            <li><strong><span class="step-number">1</span>Install Node.js</strong><br>
+                <strong>Easy way:</strong> Open PowerShell as Administrator and run:
+                <pre><code>winget install OpenJS.NodeJS.LTS</code></pre>
+                <strong>Or download:</strong> <a href="https://nodejs.org/dist/v20.11.0/node-v20.11.0-x64.msi" target="_blank">Direct Download (Windows x64)</a><br>
+                <small>After installing, restart your computer</small>
+            </li>
+            <li><strong><span class="step-number">2</span>Download & Extract</strong><br>
+                Extract the zip file anywhere on your PC
+            </li>
+            <li><strong><span class="step-number">3</span>Enable RCON on Astroneer</strong><br>
+                Open <code>\astroneer\Astro\Saved\Config\WindowsServer\AstroServerSettings.ini</code> in Notepad<br>
+                <strong>ADD these two lines</strong> (they won't be there by default):
+                <pre><code>ConsolePort=8778
+ConsolePassword=your-password-here</code></pre>
+                <small>📝 Use any port number you want - just remember it for Step 4!</small><br>
+                Save and restart your Astroneer server
+            </li>
+            <li><strong><span class="step-number">4</span>Configure Bridge</strong><br>
+                Open <code>TakaroConfig.txt</code> in Notepad and edit these settings:
+                <pre><code>IDENTITY_TOKEN=your-server-name
+REGISTRATION_TOKEN=get-from-takaro-dashboard
+HTTP_PORT=3535
+RCON_HOST=127.0.0.1
+RCON_PORT=8778
+RCON_PASSWORD=same-password-as-step-3</code></pre>
+                <small>⚠️ RCON_PORT must match ConsolePort from Step 3!</small><br>
+                <small>💡 If bridge is on same PC as Astroneer, keep RCON_HOST as 127.0.0.1</small>
+            </li>
+            <li><strong><span class="step-number">5</span>Start the Bridge</strong><br>
+                Double-click <code>start.bat</code><br>
+                <small>You should see: ✓ Connected to Takaro WebSocket & ✓ Connected to Astroneer RCON</small>
+            </li>
+        </ol>
+
+        <h2>✨ Features</h2>
+        <div class="features">
+            <div class="feature">
+                <h3>🔌 RCON Integration</h3>
+                <p>Uses Astroneer's native RCON protocol - no game modifications needed!</p>
+            </div>
+            <div class="feature">
+                <h3>👥 Player Events</h3>
+                <p>Real-time player join/leave notifications forwarded to Takaro</p>
+            </div>
+            <div class="feature">
+                <h3>⚙️ Remote Commands</h3>
+                <p>Execute server commands through Takaro (kick, player list, etc.)</p>
+            </div>
+            <div class="feature">
+                <h3>🖥️ Interactive Console</h3>
+                <p>NEW! Direct RCON console for manual server administration and testing</p>
+            </div>
+            <div class="feature">
+                <h3>📊 Monitoring</h3>
+                <p>Built-in health endpoint with connection status and metrics</p>
+            </div>
+        </div>
+
+        <h2>🔧 Configuration</h2>
+        <p>The bridge uses a simple <code>TakaroConfig.txt</code> file for configuration. Get your tokens from the <a href="https://dashboard.takaro.io/gameservers/create" target="_blank">Takaro Dashboard</a>.</p>
+
+        <h2>🖥️ RCON Console (NEW!)</h2>
+        <p>The bridge now includes an interactive RCON console for direct server administration!</p>
+        <p><strong>To use:</strong> Double-click <code>rcon-console.bat</code> to open an interactive terminal.</p>
+        <p><strong>Example commands:</strong> (Note: Commands are typed WITHOUT the "DS" prefix - it's added automatically)</p>
+        <pre><code>RCON> help                    # Show all available commands
+RCON> ListPlayers             # List all players
+RCON> ServerStatistics        # Get detailed server stats
+RCON> SaveGame MyBackup       # Save the game
+RCON> exit                    # Close console</code></pre>
+        <p>The console connects directly to your Astroneer server via RCON, allowing you to:</p>
+        <ul>
+            <li>Manage players (kick, change roles)</li>
+            <li>Control save games (save, load, delete)</li>
+            <li>Configure server settings (password, whitelist, timeouts)</li>
+            <li>View server statistics in real-time</li>
+            <li>Test and debug RCON commands</li>
+        </ul>
+
+        <h2>❓ Troubleshooting</h2>
+        <ul>
+            <li><strong>"Publisher cannot be verified" security warning</strong> - This is normal for downloaded files. Click <strong>"More info"</strong> then <strong>"Run anyway"</strong>. OR: Right-click start.bat → Properties → Check "Unblock" at the bottom → Apply → OK</li>
+            <li><strong>"node is not recognized"</strong> - Install Node.js and restart your computer</li>
+            <li><strong>"RCON connection failed"</strong> - Check that RCON_PORT and RCON_PASSWORD in TakaroConfig.txt match ConsolePort and ConsolePassword in AstroServerSettings.ini. Make sure Astroneer server is running.</li>
+            <li><strong>"Takaro connection failed"</strong> - Verify your token is correct at <a href="https://dashboard.takaro.io/gameservers/create" target="_blank">dashboard.takaro.io/gameservers/create</a></li>
+        </ul>
+
+        <h2>🔗 Resources</h2>
+        <ul>
+            <li><a href="https://github.com/mad-001/takaro-astroneer-bridge/releases" target="_blank">📦 All Releases</a></li>
+            <li><a href="https://github.com/mad-001/takaro-astroneer-bridge/blob/master/References.md" target="_blank">📚 References & Documentation</a> - API docs, working examples, and technical insights</li>
+            <li><a href="https://api.takaro.io/api.html" target="_blank">🔧 Takaro API Reference</a></li>
+            <li><a href="https://docs.takaro.io/" target="_blank">📖 Takaro Documentation</a></li>
+            <li><a href="https://takaro.io" target="_blank">🌐 Takaro Platform</a></li>
+            <li><a href="https://discord.gg/takaro" target="_blank">💬 Discord Community</a></li>
+        </ul>
+
+        <hr style="margin: 40px 0; border: none; border-top: 1px solid rgba(167, 139, 250, 0.2);">
+        <p style="text-align: center; color: #9ca3af;">
+            Made with ❤️ for the Astroneer community<br>
+            <small>© 2025 | <a href="https://github.com/mad-001" target="_blank">GitHub</a></small>
+        </p>
+    </div>
+</body>
+</html>
