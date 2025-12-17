@@ -3,6 +3,7 @@ import WebSocket from 'ws';
 import winston from 'winston';
 import * as fs from 'fs';
 import * as path from 'path';
+// @ts-ignore - No types available for astroneer-rcon-client
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
 // Load configuration from TakaroConfig.txt
@@ -426,19 +427,27 @@ async function handleTakaroRequest(message: any) {
           break;
         }
 
-        // Execute via RCON
-        if (isConnectedToRcon && rconClient) {
-          try {
-            logger.info(`Executing RCON command: ${command}`);
-            const result = await rconClient.sendRaw(command);
-            responsePayload = {
-              success: true,
-              rawResult: typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
-            };
+        // Special handling for shutdown commands - respond immediately to avoid timeout
+        const isShutdownCommand = command.toLowerCase().includes('servershutdown');
 
-            // If serverShutdown was executed, kill the game process after delay
-            if (command.toLowerCase().includes('servershutdown') || command.toLowerCase() === 'dsservershutdown') {
-              logger.info('ServerShutdown command detected - will forcefully terminate Astroneer processes in 20 seconds');
+        if (isShutdownCommand && isConnectedToRcon && rconClient) {
+          logger.info('ServerShutdown command detected - responding immediately and executing async');
+
+          // Send immediate success response to Takaro (don't wait for RCON)
+          responsePayload = {
+            success: true,
+            rawResult: 'Server shutdown initiated'
+          };
+
+          // Execute shutdown command asynchronously (without blocking)
+          (async () => {
+            try {
+              logger.info(`Executing RCON shutdown command: ${command}`);
+              await rconClient.sendRaw(command).catch(() => {
+                // Ignore errors - server might shut down before responding
+              });
+
+              // Wait 20 seconds for graceful shutdown, then force kill
               setTimeout(async () => {
                 logger.info('Forcefully terminating Astroneer server processes...');
                 try {
@@ -469,8 +478,24 @@ async function handleTakaroRequest(message: any) {
                 } catch (error) {
                   logger.error(`Failed to kill Astroneer processes: ${error}`);
                 }
-              }, 20000); // Wait 20 seconds for graceful shutdown
+              }, 20000);
+            } catch (error) {
+              logger.error(`Failed to execute shutdown command: ${error}`);
             }
+          })();
+
+          break; // Exit the switch case immediately
+        }
+
+        // Execute via RCON (non-shutdown commands)
+        if (isConnectedToRcon && rconClient) {
+          try {
+            logger.info(`Executing RCON command: ${command}`);
+            const result = await rconClient.sendRaw(command);
+            responsePayload = {
+              success: true,
+              rawResult: typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
+            };
           } catch (error) {
             logger.error(`Failed to execute RCON command: ${error}`);
             responsePayload = {

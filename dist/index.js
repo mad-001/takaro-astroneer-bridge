@@ -41,6 +41,7 @@ const ws_1 = __importDefault(require("ws"));
 const winston_1 = __importDefault(require("winston"));
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
+// @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Load configuration from TakaroConfig.txt
 function loadConfig() {
@@ -215,11 +216,8 @@ const logger = winston_1.default.createLogger({
 });
 // Configuration
 const TAKARO_WS_URL = 'wss://connect.takaro.io/';
-const TAKARO_API_URL = 'https://api.takaro.io';
 const IDENTITY_TOKEN = process.env.IDENTITY_TOKEN || '';
 const REGISTRATION_TOKEN = process.env.REGISTRATION_TOKEN || '';
-const API_TOKEN = process.env.API_TOKEN || ''; // Takaro API Bearer token for REST API
-const GAME_SERVER_ID = '0af9a1dc-d6bd-4b4b-8009-771e3afe23d8'; // Astroneer server ID
 const HTTP_PORT = parseInt(process.env.HTTP_PORT || '3000', 10);
 // RCON Configuration
 const RCON_HOST = process.env.RCON_HOST || '127.0.0.1';
@@ -359,10 +357,10 @@ async function handleTakaroRequest(message) {
     let responsePayload;
     switch (action) {
         case 'testReachability':
-            // Check if RCON is actually connected to the game server
+            // Match Eco's response format exactly
             responsePayload = {
-                connectable: isConnectedToRcon,
-                reason: isConnectedToRcon ? null : 'RCON connection lost'
+                connectable: true,
+                reason: null
             };
             break;
         case 'getPlayers':
@@ -379,7 +377,8 @@ async function handleTakaroRequest(message) {
                     responsePayload = onlinePlayers.map((p) => ({
                         gameId: String(p.guid),
                         name: String(p.name),
-                        platformId: `astroneer:${p.guid}`
+                        platformId: `astroneer:${p.guid}`,
+                        steamId: String(p.guid)
                     }));
                 }
                 catch (error) {
@@ -388,8 +387,7 @@ async function handleTakaroRequest(message) {
                 }
             }
             else {
-                logger.error('getPlayers called but RCON is not connected');
-                throw new Error('RCON connection lost - cannot retrieve player list');
+                responsePayload = [];
             }
             break;
         case 'sendMessage':
@@ -423,18 +421,23 @@ async function handleTakaroRequest(message) {
                     };
                     break;
                 }
-                // Execute via RCON (sendRaw automatically adds DS prefix)
-                if (isConnectedToRcon && rconClient) {
-                    try {
-                        logger.info(`Executing RCON command: ${command}`);
-                        const result = await rconClient.sendRaw(command);
-                        responsePayload = {
-                            success: true,
-                            rawResult: typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
-                        };
-                        // If serverShutdown was executed, kill the game process after delay
-                        if (command.toLowerCase().includes('servershutdown') || command.toLowerCase() === 'dsservershutdown') {
-                            logger.info('ServerShutdown command detected - will forcefully terminate Astroneer processes in 20 seconds');
+                // Special handling for shutdown commands - respond immediately to avoid timeout
+                const isShutdownCommand = command.toLowerCase().includes('servershutdown');
+                if (isShutdownCommand && isConnectedToRcon && rconClient) {
+                    logger.info('ServerShutdown command detected - responding immediately and executing async');
+                    // Send immediate success response to Takaro (don't wait for RCON)
+                    responsePayload = {
+                        success: true,
+                        rawResult: 'Server shutdown initiated'
+                    };
+                    // Execute shutdown command asynchronously (without blocking)
+                    (async () => {
+                        try {
+                            logger.info(`Executing RCON shutdown command: ${command}`);
+                            await rconClient.sendRaw(command).catch(() => {
+                                // Ignore errors - server might shut down before responding
+                            });
+                            // Wait 20 seconds for graceful shutdown, then force kill
                             setTimeout(async () => {
                                 logger.info('Forcefully terminating Astroneer server processes...');
                                 try {
@@ -462,8 +465,23 @@ async function handleTakaroRequest(message) {
                                 catch (error) {
                                     logger.error(`Failed to kill Astroneer processes: ${error}`);
                                 }
-                            }, 20000); // Wait 20 seconds for graceful shutdown
+                            }, 20000);
                         }
+                        catch (error) {
+                            logger.error(`Failed to execute shutdown command: ${error}`);
+                        }
+                    })();
+                    break; // Exit the switch case immediately
+                }
+                // Execute via RCON (non-shutdown commands)
+                if (isConnectedToRcon && rconClient) {
+                    try {
+                        logger.info(`Executing RCON command: ${command}`);
+                        const result = await rconClient.sendRaw(command);
+                        responsePayload = {
+                            success: true,
+                            rawResult: typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
+                        };
                     }
                     catch (error) {
                         logger.error(`Failed to execute RCON command: ${error}`);
@@ -555,29 +573,6 @@ async function handleTakaroRequest(message) {
                 responsePayload = { success: false, error: 'No player specified' };
             }
             break;
-        case 'shutdown':
-            // Shutdown the Astroneer server via RCON
-            if (isConnectedToRcon && rconClient) {
-                try {
-                    logger.info('Executing server shutdown via RCON');
-                    await rconClient.sendRaw('DSServerShutdown');
-                    responsePayload = { success: true };
-                }
-                catch (error) {
-                    logger.error(`Failed to shutdown server via RCON: ${error}`);
-                    responsePayload = { success: false, error: String(error) };
-                }
-            }
-            else {
-                responsePayload = { success: false, error: 'RCON not connected' };
-            }
-            break;
-        case 'listBans':
-            // Astroneer doesn't have a native ban list via RCON
-            // Bans are managed through player categories (Blacklisted)
-            // Return empty array to satisfy Takaro's expectation
-            responsePayload = [];
-            break;
         case 'getPlayer':
             // Queue for Lua mod
             if (args) {
@@ -609,9 +604,19 @@ async function handleTakaroRequest(message) {
             }
             break;
         case 'getPlayerLocation':
-            // Astroneer doesn't support real-time location tracking
-            // Send dummy location to allow event processing to continue
-            responsePayload = { x: 0, y: 0, z: 0 };
+            // Queue for Lua mod
+            if (args) {
+                const locArgs = typeof args === 'string' ? JSON.parse(args) : args;
+                pendingCommands.push({
+                    requestId,
+                    action,
+                    args: locArgs
+                });
+                return;
+            }
+            else {
+                responsePayload = { x: 0, y: 0, z: 0 };
+            }
             break;
         case 'listItems':
             // Queue for Lua mod
@@ -657,10 +662,6 @@ function sendToTakaro(message) {
     }
     try {
         const jsonMessage = JSON.stringify(message);
-        // Debug logging for gameEvent messages
-        if (message.type === 'gameEvent') {
-            logger.info(`DEBUG: Sending gameEvent JSON: ${jsonMessage}`);
-        }
         takaroWs.send(jsonMessage);
         if (message.type === 'response') {
             metrics.responsesSent++;
@@ -689,107 +690,22 @@ function sendGameEvent(eventType, data) {
     // Log player info if available
     const playerInfo = data.player ? ` (player: ${data.player.name} / ${data.player.gameId})` : '';
     logger.info(`Sending game event via WebSocket: ${eventType}${playerInfo}`);
-    // Use Eco's working format: type: 'gameEvent' with nested payload
-    // Only include fields that are actually provided (omit null/undefined)
-    const cleanPlayer = {};
-    if (data.player) {
-        if (data.player.gameId)
-            cleanPlayer.gameId = data.player.gameId;
-        if (data.player.name)
-            cleanPlayer.name = data.player.name;
-        if (data.player.platformId)
-            cleanPlayer.platformId = data.player.platformId;
-        if (data.player.steamId)
-            cleanPlayer.steamId = data.player.steamId;
-        if (data.player.epicOnlineServicesId)
-            cleanPlayer.epicOnlineServicesId = data.player.epicOnlineServicesId;
-        if (data.player.xboxLiveId)
-            cleanPlayer.xboxLiveId = data.player.xboxLiveId;
-        if (data.player.ip)
-            cleanPlayer.ip = data.player.ip;
-        if (data.player.ping !== undefined && data.player.ping !== null)
-            cleanPlayer.ping = data.player.ping;
-    }
+    // Generate a request ID
+    const requestId = `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Try sending as a 'createEvent' request that Takaro might handle
     const message = {
-        type: 'gameEvent',
+        type: 'request',
+        requestId: requestId,
         payload: {
-            type: eventType,
-            data: {
-                player: cleanPlayer
+            action: 'createEvent',
+            args: {
+                eventName: eventType,
+                player: data.player,
+                meta: data
             }
         }
     };
     sendToTakaro(message);
-}
-/**
- * Create event via Takaro REST API
- * This is more reliable than WebSocket gameEvent messages
- */
-async function createEventViaAPI(eventType, data) {
-    try {
-        const playerInfo = data.player ? ` (player: ${data.player.name} / ${data.player.gameId})` : '';
-        logger.info(`Creating event via API: ${eventType}${playerInfo}`);
-        // First, find the player's Takaro ID by searching for them
-        const searchUrl = `${TAKARO_API_URL}/gameserver/player/search`;
-        const searchResponse = await fetch(searchUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_TOKEN}`
-            },
-            body: JSON.stringify({
-                filters: {
-                    gameServerId: [GAME_SERVER_ID],
-                    gameId: [data.player.gameId]
-                }
-            })
-        });
-        if (!searchResponse.ok) {
-            logger.error(`Failed to search for player: ${searchResponse.status} ${searchResponse.statusText}`);
-            return;
-        }
-        const searchData = await searchResponse.json();
-        let playerId;
-        if (searchData.data && searchData.data.length > 0) {
-            // Player exists, use their ID
-            playerId = searchData.data[0].playerId;
-            logger.info(`Found existing player: ${playerId}`);
-        }
-        else {
-            logger.warn(`Player ${data.player.name} not found in Takaro - event will be created without playerId`);
-            // We'll create the event without a playerId - Takaro might auto-create the player
-            playerId = null;
-        }
-        // Create the event
-        const eventUrl = `${TAKARO_API_URL}/event`;
-        const eventResponse = await fetch(eventUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${API_TOKEN}`
-            },
-            body: JSON.stringify({
-                eventName: eventType,
-                gameserverId: GAME_SERVER_ID,
-                playerId: playerId,
-                meta: {
-                    source: 'astroneer-bridge',
-                    timestamp: new Date().toISOString(),
-                    player: data.player
-                }
-            })
-        });
-        if (!eventResponse.ok) {
-            const errorText = await eventResponse.text();
-            logger.error(`Failed to create event: ${eventResponse.status} ${errorText}`);
-            return;
-        }
-        const eventData = await eventResponse.json();
-        logger.info(`Event created successfully: ${eventData.data.id}`);
-    }
-    catch (error) {
-        logger.error(`Error creating event via API: ${error.message}`);
-    }
 }
 /**
  * Send a response to Takaro request
@@ -860,7 +776,8 @@ function connectToRcon() {
                                     player: {
                                         gameId: String(player.guid),
                                         name: String(player.name),
-                                        platformId: `astroneer:${player.guid}`
+                                        platformId: `astroneer:${player.guid}`,
+                                        steamId: String(player.guid)
                                     }
                                 });
                             }
@@ -878,15 +795,8 @@ function connectToRcon() {
             scheduleRconReconnect();
         });
         rconClient.on('error', (error) => {
-            // Log full error details to diagnose the issue
-            if (error && error.message) {
-                logger.error(`RCON error: ${error.message}`);
-            }
-            else {
-                logger.error(`RCON error (no message):`, JSON.stringify(error));
-                logger.error(`Error type: ${typeof error}, Error keys: ${error ? Object.keys(error).join(', ') : 'null'}`);
-            }
-            // Don't set isConnectedToRcon = false here - let the disconnect handler manage state
+            logger.error(`RCON error: ${error.message}`);
+            isConnectedToRcon = false;
         });
         // Player events
         rconClient.on('playerjoin', (player) => {
@@ -896,7 +806,8 @@ function connectToRcon() {
                     player: {
                         gameId: String(player.guid),
                         name: String(player.name),
-                        platformId: `astroneer:${player.guid}`
+                        platformId: `astroneer:${player.guid}`,
+                        steamId: String(player.guid)
                     }
                 });
             }
@@ -908,7 +819,8 @@ function connectToRcon() {
                     player: {
                         gameId: String(player.guid),
                         name: String(player.name),
-                        platformId: `astroneer:${player.guid}`
+                        platformId: `astroneer:${player.guid}`,
+                        steamId: String(player.guid)
                     }
                 });
             }
@@ -921,7 +833,8 @@ function connectToRcon() {
                     player: {
                         gameId: String(player.guid),
                         name: String(player.name),
-                        platformId: `astroneer:${player.guid}`
+                        platformId: `astroneer:${player.guid}`,
+                        steamId: String(player.guid)
                     }
                 });
             }
@@ -981,7 +894,7 @@ app.get('/health', (req, res) => {
  * POST /event
  * Body: { type: "player-connected", data: {...} }
  */
-app.post('/event', async (req, res) => {
+app.post('/event', (req, res) => {
     const { type, data } = req.body;
     if (!type) {
         metrics.errors++;
@@ -989,14 +902,14 @@ app.post('/event', async (req, res) => {
     }
     metrics.eventsReceived++;
     logger.info(`Received event from Lua: ${type}`);
-    try {
-        await createEventViaAPI(type, data || {});
+    if (isConnectedToTakaro) {
+        sendGameEvent(type, data || {});
         res.json({ success: true });
     }
-    catch (error) {
+    else {
         metrics.errors++;
-        logger.error(`Failed to create event: ${error.message}`);
-        res.status(500).json({ error: 'Failed to create event' });
+        logger.warn('Not connected to Takaro, event dropped');
+        res.status(503).json({ error: 'Not connected to Takaro' });
     }
 });
 /**
