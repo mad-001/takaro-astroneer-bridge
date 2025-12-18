@@ -883,7 +883,12 @@ function connectToRcon() {
       if (error && error.stack) {
         logger.error(`RCON error stack: ${error.stack}`);
       }
-      isConnectedToRcon = false;
+
+      // Mark as disconnected and schedule reconnection
+      if (isConnectedToRcon) {
+        isConnectedToRcon = false;
+        scheduleRconReconnect();
+      }
     });
 
     // Player events
