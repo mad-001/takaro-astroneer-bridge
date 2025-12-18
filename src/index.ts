@@ -380,7 +380,14 @@ async function handleTakaroRequest(message: any) {
       // Get player list from RCON
       if (isConnectedToRcon && rconClient) {
         try {
-          const players = await rconClient.listPlayers();
+          // Add timeout to prevent hanging
+          const playersPromise = rconClient.listPlayers();
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('listPlayers timeout after 10s')), 10000)
+          );
+
+          const players = await Promise.race([playersPromise, timeoutPromise]) as any[];
+
           // Filter to only return players that are actually in-game (online)
           const onlinePlayers = players.filter((p: any) => p.inGame === true);
 
@@ -397,6 +404,7 @@ async function handleTakaroRequest(message: any) {
           }));
 
         } catch (error) {
+          metrics.errors++;
           logger.error(`Failed to get players from RCON: ${error}`);
           responsePayload = [];
         }
@@ -463,11 +471,17 @@ async function handleTakaroRequest(message: any) {
               setTimeout(async () => {
                 logger.info('Forcefully terminating Astroneer server processes...');
                 try {
-                  // Kill AstroServer.exe and any related processes
-                  await execPromise('taskkill /F /IM AstroServer.exe /T').catch(() => {});
-                  await execPromise('taskkill /F /IM AstroServer-Win64-Shipping.exe /T').catch(() => {});
+                  // Kill AstroServer.exe and any related processes locally
+                  // Note: This assumes the bridge is running on the same machine as the server
+                  // For remote servers, use: wmic /node:SERVER process where "name='AstroServer.exe'" delete
+                  await execPromise('taskkill /F /IM AstroServer.exe /T 2>nul').catch((err) => {
+                    logger.warn(`taskkill AstroServer.exe: ${err.message}`);
+                  });
+                  await execPromise('taskkill /F /IM AstroServer-Win64-Shipping.exe /T 2>nul').catch((err) => {
+                    logger.warn(`taskkill AstroServer-Win64-Shipping.exe: ${err.message}`);
+                  });
 
-                  logger.info('Astroneer server processes terminated');
+                  logger.info('Astroneer server process termination attempted');
 
                   // Disconnect and reconnect RCON since server is gone
                   if (rconClient) {
@@ -629,6 +643,13 @@ async function handleTakaroRequest(message: any) {
         args: {}
       });
       return;
+
+    case 'listBans':
+      // Astroneer doesn't have a native ban list API
+      // Bans are just player category changes (Blacklisted)
+      // Return empty array for now
+      responsePayload = [];
+      break;
 
     default:
       logger.warn(`Unknown action: ${action}`);
@@ -804,13 +825,17 @@ function connectToRcon() {
           const players = await rconClient.listPlayers();
           if (players && Array.isArray(players)) {
             for (const player of players) {
-              // Validate player data before sending event
+              // Only process players who are actually in-game
+              if (!player.inGame) continue;
+
+              // Validate in-game player data before sending event
               if (!player || !player.guid || !player.name) {
-                logger.warn(`Skipping invalid player data: ${JSON.stringify(player)}`);
+                logger.warn(`Skipping in-game player with invalid data: ${JSON.stringify(player)}`);
+                metrics.errors++;
                 continue;
               }
 
-              if (player.inGame && isConnectedToTakaro) {
+              if (isConnectedToTakaro) {
                 logger.info(`Sending initial player-connected for: ${player.name} (${player.guid})`);
                 sendGameEvent('player-connected', {
                   player: {
@@ -836,9 +861,28 @@ function connectToRcon() {
       scheduleRconReconnect();
     });
 
-    rconClient.on('error', (error: Error) => {
+    rconClient.on('error', (error: any) => {
       metrics.errors++;
-      logger.error(`RCON error: ${error.message}`);
+      let errorMsg = 'Unknown error';
+
+      if (error) {
+        if (error.message) {
+          errorMsg = error.message;
+        } else if (typeof error === 'string') {
+          errorMsg = error;
+        } else {
+          try {
+            errorMsg = JSON.stringify(error);
+          } catch {
+            errorMsg = String(error);
+          }
+        }
+      }
+
+      logger.error(`RCON error: ${errorMsg}`);
+      if (error && error.stack) {
+        logger.error(`RCON error stack: ${error.stack}`);
+      }
       isConnectedToRcon = false;
     });
 
@@ -886,16 +930,19 @@ function connectToRcon() {
     });
 
     rconClient.on('newplayer', (player: any) => {
-      if (!player || !player.guid || !player.name) {
-        logger.warn(`Invalid new player data: ${JSON.stringify(player)}`);
+      // Only process if player is in-game
+      if (!player || !player.inGame) return;
+
+      // Validate in-game player data
+      if (!player.guid || !player.name) {
+        logger.warn(`New in-game player with invalid data: ${JSON.stringify(player)}`);
         metrics.errors++;
         return;
       }
 
       logger.info(`New player detected: ${player.name} (${player.guid})`);
 
-      // New players who are in-game should trigger a join event
-      if (player.inGame && isConnectedToTakaro) {
+      if (isConnectedToTakaro) {
         sendGameEvent('player-connected', {
           player: {
             gameId: String(player.guid),
