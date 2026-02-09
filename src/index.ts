@@ -9,7 +9,7 @@ import { promisify } from 'util';
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
 // Version
-const VERSION = '1.11.10';
+const VERSION = '1.11.11';
 
 // Promisified exec for shutdown operations
 const execPromise = promisify(exec);
@@ -309,7 +309,10 @@ function sendIdentify() {
  * Handle messages from Takaro
  */
 function handleTakaroMessage(message: any) {
-  logger.info(`Received from Takaro: ${message.type}`);
+  // Only log non-routine messages
+  if (message.type !== 'request' && message.type !== 'response' && message.type !== 'ping') {
+    logger.info(`Received from Takaro: ${message.type}`);
+  }
 
   switch (message.type) {
     case 'identifyResponse':
@@ -363,7 +366,11 @@ async function handleTakaroRequest(message: any) {
   metrics.requestsReceived++;
   metrics.lastRequestTime = Date.now();
 
-  logger.info(`Takaro request: ${action} (ID: ${requestId})`);
+  // Only log non-routine requests
+  const routineActions = ['testReachability', 'getPlayers'];
+  if (!routineActions.includes(action)) {
+    logger.info(`Takaro request: ${action} (ID: ${requestId})`);
+  }
 
   let responsePayload: any;
 
@@ -391,9 +398,9 @@ async function handleTakaroRequest(message: any) {
           // Filter to only return players that are actually in-game (online)
           const onlinePlayers = players.filter((p: any) => p.inGame === true);
 
-          logger.info(`getPlayers: Found ${players.length} total players, ${onlinePlayers.length} online`);
+          // Only log if there are online players
           if (onlinePlayers.length > 0) {
-            logger.info(`Online players: ${onlinePlayers.map((p: any) => `${p.name} (${p.guid})`).join(', ')}`);
+            logger.info(`getPlayers: ${onlinePlayers.length} online - ${onlinePlayers.map((p: any) => p.name).join(', ')}`);
           }
 
           responsePayload = onlinePlayers.map((p: any) => ({
@@ -700,7 +707,10 @@ function sendToTakaro(message: any) {
       metrics.eventsSent++;
     }
 
-    logger.info(`Sent to Takaro: ${message.type} ${message.requestId ? '(ID: ' + message.requestId + ')' : ''}`);
+    // Only log non-routine sends (skip routine response confirmations and pongs)
+    if (message.type !== 'response' && message.type !== 'pong') {
+      logger.info(`Sent to Takaro: ${message.type} ${message.requestId ? '(ID: ' + message.requestId + ')' : ''}`);
+    }
     return true;
   } catch (error) {
     metrics.errors++;
@@ -720,8 +730,8 @@ function sendGameEvent(eventType: string, data: any) {
   }
 
   // Log player info if available
-  const playerInfo = data.player ? ` (player: ${data.player.name} / ${data.player.gameId})` : '';
-  logger.info(`Sending game event via WebSocket: ${eventType}${playerInfo}`);
+  const playerInfo = data.player ? ` - ${data.player.name}` : '';
+  logger.info(`Game event: ${eventType}${playerInfo}`);
 
   // Use Eco's working format: type: 'gameEvent' with nested payload
   // Only include fields that are actually provided (omit null/undefined)

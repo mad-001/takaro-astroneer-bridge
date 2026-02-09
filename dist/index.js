@@ -46,7 +46,7 @@ const util_1 = require("util");
 // @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Version
-const VERSION = '1.11.10';
+const VERSION = '1.11.11';
 // Promisified exec for shutdown operations
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Load configuration from TakaroConfig.txt
@@ -317,7 +317,10 @@ function sendIdentify() {
  * Handle messages from Takaro
  */
 function handleTakaroMessage(message) {
-    logger.info(`Received from Takaro: ${message.type}`);
+    // Only log non-routine messages
+    if (message.type !== 'request' && message.type !== 'response' && message.type !== 'ping') {
+        logger.info(`Received from Takaro: ${message.type}`);
+    }
     switch (message.type) {
         case 'identifyResponse':
             handleIdentifyResponse(message);
@@ -361,7 +364,11 @@ async function handleTakaroRequest(message) {
     const { action, args } = payload;
     metrics.requestsReceived++;
     metrics.lastRequestTime = Date.now();
-    logger.info(`Takaro request: ${action} (ID: ${requestId})`);
+    // Only log non-routine requests
+    const routineActions = ['testReachability', 'getPlayers'];
+    if (!routineActions.includes(action)) {
+        logger.info(`Takaro request: ${action} (ID: ${requestId})`);
+    }
     let responsePayload;
     switch (action) {
         case 'testReachability':
@@ -381,9 +388,9 @@ async function handleTakaroRequest(message) {
                     const players = await Promise.race([playersPromise, timeoutPromise]);
                     // Filter to only return players that are actually in-game (online)
                     const onlinePlayers = players.filter((p) => p.inGame === true);
-                    logger.info(`getPlayers: Found ${players.length} total players, ${onlinePlayers.length} online`);
+                    // Only log if there are online players
                     if (onlinePlayers.length > 0) {
-                        logger.info(`Online players: ${onlinePlayers.map((p) => `${p.name} (${p.guid})`).join(', ')}`);
+                        logger.info(`getPlayers: ${onlinePlayers.length} online - ${onlinePlayers.map((p) => p.name).join(', ')}`);
                     }
                     responsePayload = onlinePlayers.map((p) => ({
                         gameId: String(p.guid),
@@ -679,7 +686,10 @@ function sendToTakaro(message) {
         else if (message.type === 'gameEvent') {
             metrics.eventsSent++;
         }
-        logger.info(`Sent to Takaro: ${message.type} ${message.requestId ? '(ID: ' + message.requestId + ')' : ''}`);
+        // Only log non-routine sends (skip routine response confirmations and pongs)
+        if (message.type !== 'response' && message.type !== 'pong') {
+            logger.info(`Sent to Takaro: ${message.type} ${message.requestId ? '(ID: ' + message.requestId + ')' : ''}`);
+        }
         return true;
     }
     catch (error) {
@@ -698,8 +708,8 @@ function sendGameEvent(eventType, data) {
         return;
     }
     // Log player info if available
-    const playerInfo = data.player ? ` (player: ${data.player.name} / ${data.player.gameId})` : '';
-    logger.info(`Sending game event via WebSocket: ${eventType}${playerInfo}`);
+    const playerInfo = data.player ? ` - ${data.player.name}` : '';
+    logger.info(`Game event: ${eventType}${playerInfo}`);
     // Use Eco's working format: type: 'gameEvent' with nested payload
     // Only include fields that are actually provided (omit null/undefined)
     const cleanPlayer = {};
