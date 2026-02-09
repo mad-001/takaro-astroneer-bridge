@@ -9,7 +9,7 @@ import { promisify } from 'util';
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
 // Version
-const VERSION = '1.11.9';
+const VERSION = '1.11.10';
 
 // Promisified exec for shutdown operations
 const execPromise = promisify(exec);

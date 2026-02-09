@@ -46,7 +46,7 @@ const util_1 = require("util");
 // @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Version
-const VERSION = '1.11.9';
+const VERSION = '1.11.10';
 // Promisified exec for shutdown operations
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Load configuration from TakaroConfig.txt
