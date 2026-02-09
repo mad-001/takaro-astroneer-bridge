@@ -46,7 +46,7 @@ const util_1 = require("util");
 // @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Version
-const VERSION = '1.11.11';
+const VERSION = '1.11.12';
 // Promisified exec for shutdown operations
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Load configuration from TakaroConfig.txt
@@ -364,8 +364,8 @@ async function handleTakaroRequest(message) {
     const { action, args } = payload;
     metrics.requestsReceived++;
     metrics.lastRequestTime = Date.now();
-    // Only log non-routine requests
-    const routineActions = ['testReachability', 'getPlayers'];
+    // Only log non-routine requests (skip polling requests that happen every 30s)
+    const routineActions = ['testReachability', 'getPlayers', 'getPlayerLocation', 'getPlayerInventory'];
     if (!routineActions.includes(action)) {
         logger.info(`Takaro request: ${action} (ID: ${requestId})`);
     }
@@ -388,10 +388,6 @@ async function handleTakaroRequest(message) {
                     const players = await Promise.race([playersPromise, timeoutPromise]);
                     // Filter to only return players that are actually in-game (online)
                     const onlinePlayers = players.filter((p) => p.inGame === true);
-                    // Only log if there are online players
-                    if (onlinePlayers.length > 0) {
-                        logger.info(`getPlayers: ${onlinePlayers.length} online - ${onlinePlayers.map((p) => p.name).join(', ')}`);
-                    }
                     responsePayload = onlinePlayers.map((p) => ({
                         gameId: String(p.guid),
                         name: String(p.name),

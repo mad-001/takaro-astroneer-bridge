@@ -9,7 +9,7 @@ import { promisify } from 'util';
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
 // Version
-const VERSION = '1.11.11';
+const VERSION = '1.11.12';
 
 // Promisified exec for shutdown operations
 const execPromise = promisify(exec);
@@ -366,8 +366,8 @@ async function handleTakaroRequest(message: any) {
   metrics.requestsReceived++;
   metrics.lastRequestTime = Date.now();
 
-  // Only log non-routine requests
-  const routineActions = ['testReachability', 'getPlayers'];
+  // Only log non-routine requests (skip polling requests that happen every 30s)
+  const routineActions = ['testReachability', 'getPlayers', 'getPlayerLocation', 'getPlayerInventory'];
   if (!routineActions.includes(action)) {
     logger.info(`Takaro request: ${action} (ID: ${requestId})`);
   }
@@ -397,11 +397,6 @@ async function handleTakaroRequest(message: any) {
 
           // Filter to only return players that are actually in-game (online)
           const onlinePlayers = players.filter((p: any) => p.inGame === true);
-
-          // Only log if there are online players
-          if (onlinePlayers.length > 0) {
-            logger.info(`getPlayers: ${onlinePlayers.length} online - ${onlinePlayers.map((p: any) => p.name).join(', ')}`);
-          }
 
           responsePayload = onlinePlayers.map((p: any) => ({
             gameId: String(p.guid),
