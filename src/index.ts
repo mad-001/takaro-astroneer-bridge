@@ -1,6 +1,7 @@
 import express from 'express';
 import WebSocket from 'ws';
 import winston from 'winston';
+import 'winston-daily-rotate-file';
 import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
@@ -9,7 +10,7 @@ import { promisify } from 'util';
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
 // Version
-const VERSION = '1.11.12';
+const VERSION = '1.12.0';
 
 // Promisified exec for shutdown operations
 const execPromise = promisify(exec);
@@ -180,18 +181,32 @@ For more information, visit: https://github.com/mad-001/takaro-astroneer-bridge
 `;
 }
 
+// Ensure logs directory exists
+const logsDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
+}
+
 // Configure logger
+const logFormat = winston.format.combine(
+  winston.format.timestamp(),
+  winston.format.printf(({ timestamp, level, message }) => {
+    return `${timestamp} [${level.toUpperCase()}] ${message}`;
+  })
+);
+
 const logger = winston.createLogger({
   level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.printf(({ timestamp, level, message }) => {
-      return `${timestamp} [${level.toUpperCase()}] ${message}`;
-    })
-  ),
+  format: logFormat,
   transports: [
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'takaro-bridge.log' })
+    new winston.transports.Console({ format: logFormat }),
+    new (winston.transports as any).DailyRotateFile({
+      dirname: logsDir,
+      filename: 'takaro-bridge-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      maxFiles: 20,
+      format: logFormat
+    })
   ]
 });
 

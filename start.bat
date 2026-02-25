@@ -48,11 +48,13 @@ if not exist dist\index.js (
     exit /b 1
 )
 
-REM Start the bridge
+REM Start the bridge (auto-restarts on crash)
+:loop
 echo.
 echo Starting bridge server...
 echo --------------------------------------------------------
 node dist/index.js
-
-REM Exit and close window when node stops
-exit
+echo.
+echo Bridge exited - restarting in 5 seconds... (Close this window to stop)
+timeout /t 5 /nobreak
+goto loop

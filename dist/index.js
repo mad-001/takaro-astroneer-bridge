@@ -39,6 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const ws_1 = __importDefault(require("ws"));
 const winston_1 = __importDefault(require("winston"));
+require("winston-daily-rotate-file");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const child_process_1 = require("child_process");
@@ -46,7 +47,7 @@ const util_1 = require("util");
 // @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Version
-const VERSION = '1.11.12';
+const VERSION = '1.12.0';
 // Promisified exec for shutdown operations
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Load configuration from TakaroConfig.txt
@@ -209,15 +210,27 @@ Blacklisted  - Banned from server, always blocked
 For more information, visit: https://github.com/mad-001/takaro-astroneer-bridge
 `;
 }
+// Ensure logs directory exists
+const logsDir = path.join(process.cwd(), 'logs');
+if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+}
 // Configure logger
+const logFormat = winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.printf(({ timestamp, level, message }) => {
+    return `${timestamp} [${level.toUpperCase()}] ${message}`;
+}));
 const logger = winston_1.default.createLogger({
     level: 'info',
-    format: winston_1.default.format.combine(winston_1.default.format.timestamp(), winston_1.default.format.printf(({ timestamp, level, message }) => {
-        return `${timestamp} [${level.toUpperCase()}] ${message}`;
-    })),
+    format: logFormat,
     transports: [
-        new winston_1.default.transports.Console(),
-        new winston_1.default.transports.File({ filename: 'takaro-bridge.log' })
+        new winston_1.default.transports.Console({ format: logFormat }),
+        new winston_1.default.transports.DailyRotateFile({
+            dirname: logsDir,
+            filename: 'takaro-bridge-%DATE%.log',
+            datePattern: 'YYYY-MM-DD',
+            maxFiles: 20,
+            format: logFormat
+        })
     ]
 });
 // Configuration
