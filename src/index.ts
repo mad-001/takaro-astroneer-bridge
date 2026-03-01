@@ -10,7 +10,7 @@ import { promisify } from 'util';
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
 // Version
-const VERSION = '1.22.0';
+const VERSION = '1.23.0';
 
 // Promisified exec for shutdown operations
 const execPromise = promisify(exec);
@@ -874,7 +874,7 @@ function connectToRcon() {
   if (rconClient) {
     try {
       rconClient.removeAllListeners();
-      rconClient.disconnect();
+      rconClient.disconnect().catch(() => {});
     } catch (e) {}
     rconClient = null;
   }
