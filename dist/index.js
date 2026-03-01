@@ -47,7 +47,7 @@ const util_1 = require("util");
 // @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Version
-const VERSION = '1.15.0';
+const VERSION = '1.16.0';
 // Promisified exec for shutdown operations
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Load configuration from TakaroConfig.txt
@@ -818,7 +818,7 @@ function connectToRcon() {
             password: RCON_PASSWORD
         });
         // Connection events
-        rconClient.on('connected', async () => {
+        rconClient.on('connected', () => {
             logger.info('Connected to Astroneer RCON');
             isConnectedToRcon = true;
             rconReconnectAttempts = 0;
@@ -826,39 +826,6 @@ function connectToRcon() {
                 clearTimeout(rconReconnectTimeout);
                 rconReconnectTimeout = null;
             }
-            // Send player-connected events for players who are already online
-            // This handles the case where the bridge starts/restarts while players are in-game
-            setTimeout(async () => {
-                try {
-                    const players = await rconClient.listPlayers();
-                    if (players && Array.isArray(players)) {
-                        for (const player of players) {
-                            // Only process players who are actually in-game
-                            if (!player.inGame)
-                                continue;
-                            // Validate in-game player data before sending event
-                            if (!player || !player.guid || !player.name) {
-                                logger.warn(`Skipping in-game player with invalid data: ${JSON.stringify(player)}`);
-                                metrics.errors++;
-                                continue;
-                            }
-                            if (isConnectedToTakaro) {
-                                logger.info(`Sending initial player-connected for: ${player.name} (${player.guid})`);
-                                sendPlayerConnected({
-                                    gameId: String(player.guid),
-                                    name: String(player.name),
-                                    platformId: `astroneer:${player.guid}`,
-                                    steamId: String(player.guid)
-                                });
-                            }
-                        }
-                    }
-                }
-                catch (error) {
-                    metrics.errors++;
-                    logger.error(`Failed to send initial player events: ${error}`);
-                }
-            }, 3000); // Wait 3 seconds for Takaro connection to be ready
         });
         rconClient.on('disconnect', () => {
             logger.warn('Disconnected from Astroneer RCON');
