@@ -47,7 +47,7 @@ const util_1 = require("util");
 // @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Version
-const VERSION = '1.17.0';
+const VERSION = '1.18.0';
 // Promisified exec for shutdown operations
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Load configuration from TakaroConfig.txt
@@ -794,6 +794,17 @@ function connectToRcon() {
     if (!RCON_PASSWORD) {
         logger.warn('RCON_PASSWORD not configured, skipping RCON connection');
         return;
+    }
+    // Clean up old client before creating a new one.
+    // Without this, the old client keeps polling and fires duplicate events
+    // alongside the new client every time RCON reconnects.
+    if (rconClient) {
+        try {
+            rconClient.removeAllListeners();
+            rconClient.disconnect();
+        }
+        catch (e) { }
+        rconClient = null;
     }
     logger.info(`Connecting to Astroneer RCON at ${RCON_HOST}:${RCON_PORT}`);
     try {
