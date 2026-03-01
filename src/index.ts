@@ -10,7 +10,7 @@ import { promisify } from 'util';
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
 // Version
-const VERSION = '1.18.0';
+const VERSION = '1.19.0';
 
 // Promisified exec for shutdown operations
 const execPromise = promisify(exec);
@@ -528,7 +528,7 @@ async function handleTakaroRequest(message: any) {
         if (isConnectedToRcon && rconClient) {
           try {
             logger.info(`Executing RCON command: ${command}`);
-            const result = await rconClient.sendRaw(command);
+            const result = await rconClient.sendRaw(command, true);
             responsePayload = {
               success: true,
               rawResult: typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
@@ -580,7 +580,7 @@ async function handleTakaroRequest(message: any) {
         const banArgs = typeof args === 'string' ? JSON.parse(args) : args;
         if (isConnectedToRcon && rconClient) {
           try {
-            await rconClient.sendRaw(`SetPlayerCategoryGuid ${banArgs.gameId} Blacklisted`);
+            await rconClient.sendRaw(`SetPlayerCategoryGuid ${banArgs.gameId} Blacklisted`, true);
             logger.info(`Banned player GUID: ${banArgs.gameId}`);
             responsePayload = { success: true };
           } catch (error) {
@@ -601,7 +601,7 @@ async function handleTakaroRequest(message: any) {
         const unbanArgs = typeof args === 'string' ? JSON.parse(args) : args;
         if (isConnectedToRcon && rconClient) {
           try {
-            await rconClient.sendRaw(`SetPlayerCategoryGuid ${unbanArgs.gameId} Unlisted`);
+            await rconClient.sendRaw(`SetPlayerCategoryGuid ${unbanArgs.gameId} Unlisted`, true);
             logger.info(`Unbanned player GUID: ${unbanArgs.gameId}`);
             responsePayload = { success: true };
           } catch (error) {

@@ -47,7 +47,7 @@ const util_1 = require("util");
 // @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Version
-const VERSION = '1.18.0';
+const VERSION = '1.19.0';
 // Promisified exec for shutdown operations
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Load configuration from TakaroConfig.txt
@@ -507,7 +507,7 @@ async function handleTakaroRequest(message) {
                 if (isConnectedToRcon && rconClient) {
                     try {
                         logger.info(`Executing RCON command: ${command}`);
-                        const result = await rconClient.sendRaw(command);
+                        const result = await rconClient.sendRaw(command, true);
                         responsePayload = {
                             success: true,
                             rawResult: typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
@@ -563,7 +563,7 @@ async function handleTakaroRequest(message) {
                 const banArgs = typeof args === 'string' ? JSON.parse(args) : args;
                 if (isConnectedToRcon && rconClient) {
                     try {
-                        await rconClient.sendRaw(`SetPlayerCategoryGuid ${banArgs.gameId} Blacklisted`);
+                        await rconClient.sendRaw(`SetPlayerCategoryGuid ${banArgs.gameId} Blacklisted`, true);
                         logger.info(`Banned player GUID: ${banArgs.gameId}`);
                         responsePayload = { success: true };
                     }
@@ -586,7 +586,7 @@ async function handleTakaroRequest(message) {
                 const unbanArgs = typeof args === 'string' ? JSON.parse(args) : args;
                 if (isConnectedToRcon && rconClient) {
                     try {
-                        await rconClient.sendRaw(`SetPlayerCategoryGuid ${unbanArgs.gameId} Unlisted`);
+                        await rconClient.sendRaw(`SetPlayerCategoryGuid ${unbanArgs.gameId} Unlisted`, true);
                         logger.info(`Unbanned player GUID: ${unbanArgs.gameId}`);
                         responsePayload = { success: true };
                     }
