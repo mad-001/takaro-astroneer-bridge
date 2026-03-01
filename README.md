@@ -2,9 +2,9 @@
 
 Connects your Astroneer dedicated server to Takaro using RCON. **No mods required.**
 
-## 🎉 Latest Version: v1.21.0
+## 🎉 Latest Version: v1.22.0
 
-**Bug fix:** ListPlayers, ListGames, and other JSON commands now display formatted output again instead of a single unreadable line.
+**New:** `kick <name>` now works in the console. The bridge looks up the player's GUID automatically and sends `KickPlayerGuid` — no need to copy GUIDs manually.
 
 ---
 

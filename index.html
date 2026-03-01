@@ -184,23 +184,30 @@
         </div>
 
         <div class="info">
-            <strong>🚀 v1.21.0 - STABLE!</strong><br>
-            Fixed ListPlayers and other JSON commands showing as one unreadable line.
+            <strong>🚀 v1.22.0 - STABLE!</strong><br>
+            Added <code>kick &lt;name&gt;</code> support. You can now kick players by name instead of GUID.
         </div>
 
         <h2>📥 Download</h2>
-        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.21.0" class="download-btn">
-            🌟 Download Latest Version (v1.21.0) 🌟
+        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.22.0" class="download-btn">
+            🌟 Download Latest Version (v1.22.0) 🌟
         </a>
         <p><small>Released: March 1, 2026 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
 
-        <h2>🆕 What's New in v1.21.0</h2>
+        <h2>🆕 What's New in v1.22.0</h2>
         <div class="info">
-            <h3>Bug Fix: JSON command responses shown as one unreadable line</h3>
-            <p>The v1.19.0 plain-text fix caused JSON responses (like ListPlayers, ListGames, ServerStatistics) to be returned as raw compact strings. The bridge now re-parses and pretty-prints any JSON response automatically.</p>
+            <h3>Feature: kick &lt;name&gt; command alias</h3>
+            <p>Astroneer RCON only supports <code>KickPlayerGuid</code>. Typing <code>kick Crash</code> would send an invalid command, causing a 15-second timeout and RCON reconnect. The bridge now intercepts <code>kick &lt;name&gt;</code>, looks up the player's GUID automatically, and sends the correct <code>KickPlayerGuid</code> command.</p>
+            <p>Example: <code>kick Crash</code> now works correctly.</p>
         </div>
 
         <h2>📜 Previous Updates</h2>
+        <details>
+            <summary><strong>v1.21.0 - Fix JSON commands showing as one line</strong></summary>
+            <div class="info" style="margin-top: 15px;">
+                <p>The v1.19.0 plain-text fix caused JSON responses (ListPlayers, ListGames, ServerStatistics) to be returned as raw compact strings. The bridge now re-parses and pretty-prints any JSON response automatically.</p>
+            </div>
+        </details>
         <details>
             <summary><strong>v1.20.0 - Fix SaveGame/NewGame returning error</strong></summary>
             <div class="info" style="margin-top: 15px;">

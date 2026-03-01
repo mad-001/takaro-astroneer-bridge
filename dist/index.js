@@ -47,7 +47,7 @@ const util_1 = require("util");
 // @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Version
-const VERSION = '1.21.0';
+const VERSION = '1.22.0';
 // Promisified exec for shutdown operations
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Load configuration from TakaroConfig.txt
@@ -87,6 +87,12 @@ ListPlayers
   Arguments: None
   Returns: Player info array with GUIDs, categories, names, inGame status
   Sends: DSListPlayers
+
+kick <playerName>
+  Description: Kick a player by name (bridge resolves name to GUID automatically)
+  Arguments: playerName (string) - Player's display name
+  Returns: Success or error message
+  Example: kick Mad
 
 KickPlayerGuid <playerGuid>
   Description: Kick a player by their GUID
@@ -506,6 +512,22 @@ async function handleTakaroRequest(message) {
                 // Execute via RCON (non-shutdown commands)
                 if (isConnectedToRcon && rconClient) {
                     try {
+                        // 'kick <name>' alias - Astroneer only has KickPlayerGuid, not kick by name.
+                        // Look up the player's GUID from the player list first.
+                        const kickNameMatch = command.match(/^kick\s+(.+)$/i);
+                        if (kickNameMatch && !/^\d+$/.test(kickNameMatch[1].trim())) {
+                            const targetName = kickNameMatch[1].trim().toLowerCase();
+                            const players = await rconClient.listPlayers();
+                            const match = players.find((p) => p.name.toLowerCase() === targetName);
+                            if (!match) {
+                                responsePayload = { success: false, rawResult: `Error: Player "${kickNameMatch[1].trim()}" not found` };
+                                break;
+                            }
+                            logger.info(`Resolved kick "${match.name}" → KickPlayerGuid ${match.guid}`);
+                            const kickResult = await rconClient.sendRaw(`KickPlayerGuid ${match.guid}`, true);
+                            responsePayload = { success: true, rawResult: String(kickResult).trim() || 'Player kicked' };
+                            break;
+                        }
                         logger.info(`Executing RCON command: ${command}`);
                         // SaveGame and NewGame don't return a response from Astroneer - pass noResponse=true
                         // so sendRaw resolves immediately instead of timing out after 15s
