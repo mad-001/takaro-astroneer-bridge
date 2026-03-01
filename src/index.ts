@@ -10,7 +10,7 @@ import { promisify } from 'util';
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
 // Version
-const VERSION = '1.13.0';
+const VERSION = '1.14.0';
 
 // Promisified exec for shutdown operations
 const execPromise = promisify(exec);
@@ -233,6 +233,11 @@ let rconReconnectTimeout: NodeJS.Timeout | null = null;
 
 // Pending requests (for request/response pattern)
 const pendingRequests = new Map<string, (response: any) => void>();
+
+// Deduplication: track recently-sent player-connected events (guid -> timestamp)
+// Prevents duplicate events from initial scan + playerjoin firing simultaneously
+const recentConnectEvents = new Map<string, number>();
+const DEDUP_WINDOW_MS = 15000; // 15 seconds
 
 // Pending commands for Lua mod (if ever needed)
 const pendingCommands: any[] = [];
@@ -735,6 +740,21 @@ function sendToTakaro(message: any) {
 }
 
 /**
+ * Send player-connected event with deduplication to prevent double events
+ * when initial scan and playerjoin fire simultaneously on reconnect
+ */
+function sendPlayerConnected(player: { gameId: string; name: string; platformId: string; steamId: string }) {
+  const now = Date.now();
+  const lastSent = recentConnectEvents.get(player.gameId);
+  if (lastSent && now - lastSent < DEDUP_WINDOW_MS) {
+    logger.info(`Skipping duplicate player-connected for ${player.name} (sent ${now - lastSent}ms ago)`);
+    return;
+  }
+  recentConnectEvents.set(player.gameId, now);
+  sendGameEvent('player-connected', { player });
+}
+
+/**
  * Send a game event to Takaro via WebSocket
  * Uses the gameEvent format that worked in v1.11.1
  */
@@ -862,13 +882,11 @@ function connectToRcon() {
 
               if (isConnectedToTakaro) {
                 logger.info(`Sending initial player-connected for: ${player.name} (${player.guid})`);
-                sendGameEvent('player-connected', {
-                  player: {
-                    gameId: String(player.guid),
-                    name: String(player.name),
-                    platformId: `astroneer:${player.guid}`,
-                    steamId: String(player.guid)
-                  }
+                sendPlayerConnected({
+                  gameId: String(player.guid),
+                  name: String(player.name),
+                  platformId: `astroneer:${player.guid}`,
+                  steamId: String(player.guid)
                 });
               }
             }
@@ -927,13 +945,11 @@ function connectToRcon() {
       logger.info(`Player joined: ${player.name} (${player.guid})`);
 
       if (isConnectedToTakaro) {
-        sendGameEvent('player-connected', {
-          player: {
-            gameId: String(player.guid),
-            name: String(player.name),
-            platformId: `astroneer:${player.guid}`,
-            steamId: String(player.guid)
-          }
+        sendPlayerConnected({
+          gameId: String(player.guid),
+          name: String(player.name),
+          platformId: `astroneer:${player.guid}`,
+          steamId: String(player.guid)
         });
       }
     });
