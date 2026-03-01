@@ -186,7 +186,7 @@ DeleteGame <saveName>
   Arguments: saveName (string) - Name of save to delete
   Returns: Confirmation message
   Warning: This permanently deletes the save!
-  Example: DSDeleteGame UnwantedSave
+  Example: DeleteGame UnwantedSave
 
 ═══ PLAYER CATEGORIES ═══════════════════════════════════════════════════════
 
