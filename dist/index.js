@@ -47,7 +47,7 @@ const util_1 = require("util");
 // @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Version
-const VERSION = '1.14.0';
+const VERSION = '1.15.0';
 // Promisified exec for shutdown operations
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Load configuration from TakaroConfig.txt
@@ -252,10 +252,9 @@ let isConnectedToRcon = false;
 let rconReconnectTimeout = null;
 // Pending requests (for request/response pattern)
 const pendingRequests = new Map();
-// Deduplication: track recently-sent player-connected events (guid -> timestamp)
-// Prevents duplicate events from initial scan + playerjoin firing simultaneously
-const recentConnectEvents = new Map();
-const DEDUP_WINDOW_MS = 15000; // 15 seconds
+// Track players we've sent player-connected for (cleared only on player-disconnected)
+// Prevents re-firing connected events when RCON reconnects while players are still in-game
+const connectedPlayers = new Set();
 // Pending commands for Lua mod (if ever needed)
 const pendingCommands = [];
 // Reconnection state
@@ -716,17 +715,15 @@ function sendToTakaro(message) {
     }
 }
 /**
- * Send player-connected event with deduplication to prevent double events
- * when initial scan and playerjoin fire simultaneously on reconnect
+ * Send player-connected event, skipping if player is already tracked as connected.
+ * This prevents duplicate events when RCON reconnects while players are still in-game.
  */
 function sendPlayerConnected(player) {
-    const now = Date.now();
-    const lastSent = recentConnectEvents.get(player.gameId);
-    if (lastSent && now - lastSent < DEDUP_WINDOW_MS) {
-        logger.info(`Skipping duplicate player-connected for ${player.name} (sent ${now - lastSent}ms ago)`);
+    if (connectedPlayers.has(player.gameId)) {
+        logger.info(`Skipping player-connected for ${player.name} - already connected`);
         return;
     }
-    recentConnectEvents.set(player.gameId, now);
+    connectedPlayers.add(player.gameId);
     sendGameEvent('player-connected', { player });
 }
 /**
@@ -921,6 +918,7 @@ function connectToRcon() {
                 return;
             }
             logger.info(`Player left: ${player.name} (${player.guid})`);
+            connectedPlayers.delete(String(player.guid));
             if (isConnectedToTakaro) {
                 sendGameEvent('player-disconnected', {
                     player: {
