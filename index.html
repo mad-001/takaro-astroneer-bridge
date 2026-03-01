@@ -184,35 +184,23 @@
         </div>
 
         <div class="info">
-            <strong>🚀 v1.13.0 - BUG FIXES!</strong><br>
-            Eliminated duplicate player-connected events and fixed <code>listEntities</code> error from Takaro.
+            <strong>🚀 v1.17.0 - STABLE!</strong><br>
+            Connect and disconnect events now work correctly in all scenarios including game crashes.
         </div>
 
         <h2>📥 Download</h2>
-        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.13.0" class="download-btn">
-            🌟 Download Latest Version (v1.13.0) 🌟
+        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.17.0" class="download-btn">
+            🌟 Download Latest Version (v1.17.0) 🌟
         </a>
         <p><small>Released: March 1, 2026 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
 
-        <h2>🆕 What's New in v1.13.0</h2>
+        <h2>🆕 What's New in v1.17.0</h2>
         <div class="info">
-            <h3>Bug Fixes</h3>
-
-            <h4>Fixed: Duplicate player-connected events</h4>
+            <h3>Bug Fix: Events blocked after game crash</h3>
+            <p>When a player's game crashed instead of cleanly disconnecting, the bridge was silently blocking their next connect event. This is now fixed — all connect and disconnect events fire correctly regardless of how a player leaves.</p>
             <ul>
-                <li>The <code>newplayer</code> RCON event handler was firing alongside <code>playerjoin</code> for the same join, causing every player connect to send two events to Takaro</li>
-                <li>Removed the redundant <code>newplayer</code> handler - <code>playerjoin</code> already covers all joins</li>
-            </ul>
-
-            <h4>Fixed: listEntities error</h4>
-            <ul>
-                <li>Takaro was sending <code>listEntities</code> requests and receiving an error object instead of an array</li>
-                <li>Added <code>listEntities</code> handler that returns an empty array as expected</li>
-            </ul>
-
-            <h4>All Features Working</h4>
-            <ul>
-                <li>✅ Real-time player events (< 1s latency, no duplicates)</li>
+                <li>✅ Real-time player events (< 1s latency)</li>
+                <li>✅ Connect/disconnect work after game crashes</li>
                 <li>✅ Discord notifications</li>
                 <li>✅ Server shutdown with force-kill fallback</li>
                 <li>✅ Full RCON command support</li>
@@ -220,6 +208,18 @@
         </div>
 
         <h2>📜 Previous Updates</h2>
+        <details>
+            <summary><strong>v1.16.0 - Remove initial player scan</strong></summary>
+            <div class="info" style="margin-top: 15px;">
+                <p>Removed the initial player scan on RCON connect that was causing duplicate connected events every time the bridge restarted.</p>
+            </div>
+        </details>
+        <details>
+            <summary><strong>v1.13.0 - listEntities fix & newplayer dedup</strong></summary>
+            <div class="info" style="margin-top: 15px;">
+                <p>Fixed <code>listEntities</code> error from Takaro. Removed redundant <code>newplayer</code> handler that was duplicating connect events.</p>
+            </div>
+        </details>
         <details>
             <summary><strong>v1.12.0 - Log rotation & deployment cleanup</strong></summary>
             <div class="info" style="margin-top: 15px;">
