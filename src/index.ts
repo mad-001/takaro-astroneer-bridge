@@ -10,7 +10,7 @@ import { promisify } from 'util';
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
 // Version
-const VERSION = '1.19.0';
+const VERSION = '1.20.0';
 
 // Promisified exec for shutdown operations
 const execPromise = promisify(exec);
@@ -528,11 +528,24 @@ async function handleTakaroRequest(message: any) {
         if (isConnectedToRcon && rconClient) {
           try {
             logger.info(`Executing RCON command: ${command}`);
-            const result = await rconClient.sendRaw(command, true);
-            responsePayload = {
-              success: true,
-              rawResult: typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
-            };
+
+            // SaveGame and NewGame don't return a response from Astroneer - pass noResponse=true
+            // so sendRaw resolves immediately instead of timing out after 15s
+            const isNoResponseCmd = /^(savegame|newgame)\b/i.test(command);
+
+            if (isNoResponseCmd) {
+              await rconClient.sendRaw(command, true, true);
+              responsePayload = {
+                success: true,
+                rawResult: 'Command executed successfully'
+              };
+            } else {
+              const result = await rconClient.sendRaw(command, true);
+              responsePayload = {
+                success: true,
+                rawResult: typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
+              };
+            }
           } catch (error) {
             logger.error(`Failed to execute RCON command: ${error}`);
             responsePayload = {
