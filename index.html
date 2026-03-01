@@ -184,49 +184,54 @@
         </div>
 
         <div class="info">
-            <strong>🚀 v1.11.9 - OPTIMIZED & MORE RELIABLE!</strong><br>
-            Enhanced error handling, improved performance, player data validation - all features working perfectly!
+            <strong>🚀 v1.13.0 - BUG FIXES!</strong><br>
+            Eliminated duplicate player-connected events and fixed <code>listEntities</code> error from Takaro.
         </div>
 
         <h2>📥 Download</h2>
-        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.11.9" class="download-btn">
-            🌟 Download Latest Version (v1.11.9) 🌟
+        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.13.0" class="download-btn">
+            🌟 Download Latest Version (v1.13.0) 🌟
         </a>
-        <p><small>Released: December 17, 2025 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
+        <p><small>Released: March 1, 2026 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
 
-        <h2>🆕 What's New in v1.11.9</h2>
+        <h2>🆕 What's New in v1.13.0</h2>
         <div class="info">
-            <h3>Code Optimization & Reliability Improvements</h3>
-            <p><strong>This release focuses on code quality, error handling, and long-term reliability:</strong></p>
+            <h3>Bug Fixes</h3>
 
-            <h4>Performance & Code Quality</h4>
+            <h4>Fixed: Duplicate player-connected events</h4>
             <ul>
-                <li>Move imports to top level for better performance</li>
-                <li>Fix HTTP_PORT default to match documentation (3535)</li>
-                <li>Add version tracking and startup logging</li>
-                <li>Remove unused code and optimize structure</li>
+                <li>The <code>newplayer</code> RCON event handler was firing alongside <code>playerjoin</code> for the same join, causing every player connect to send two events to Takaro</li>
+                <li>Removed the redundant <code>newplayer</code> handler - <code>playerjoin</code> already covers all joins</li>
             </ul>
 
-            <h4>Error Handling & Validation</h4>
+            <h4>Fixed: listEntities error</h4>
             <ul>
-                <li>Player data validation in all RCON event handlers</li>
-                <li>Comprehensive error tracking with metrics</li>
-                <li>Max reconnect attempts (100) to prevent infinite loops</li>
-                <li>Better error messages and logging throughout</li>
+                <li>Takaro was sending <code>listEntities</code> requests and receiving an error object instead of an array</li>
+                <li>Added <code>listEntities</code> handler that returns an empty array as expected</li>
             </ul>
 
-            <h4>All Features Still Working Perfectly</h4>
+            <h4>All Features Working</h4>
             <ul>
-                <li>✅ Real-time player events (< 1s latency)</li>
+                <li>✅ Real-time player events (< 1s latency, no duplicates)</li>
                 <li>✅ Discord notifications</li>
                 <li>✅ Server shutdown with force-kill fallback</li>
                 <li>✅ Full RCON command support</li>
             </ul>
-
-            <p><strong>Recommended for all users.</strong> More reliable and better error handling than v1.11.8.</p>
         </div>
 
         <h2>📜 Previous Updates</h2>
+        <details>
+            <summary><strong>v1.12.0 - Log rotation & deployment cleanup</strong></summary>
+            <div class="info" style="margin-top: 15px;">
+                <p>Added log rotation (20-day retention), cleaned up server deployment scripts.</p>
+            </div>
+        </details>
+        <details>
+            <summary><strong>v1.11.9 - Code optimization & reliability</strong></summary>
+            <div class="info" style="margin-top: 15px;">
+                <p>Player data validation, error tracking with metrics, max reconnect attempts, improved logging throughout.</p>
+            </div>
+        </details>
         <details>
             <summary><strong>v1.11.8 - Stable Release (superseded)</strong></summary>
             <div class="info" style="margin-top: 15px;">

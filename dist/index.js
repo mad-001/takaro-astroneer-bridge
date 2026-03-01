@@ -47,7 +47,7 @@ const util_1 = require("util");
 // @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Version
-const VERSION = '1.12.0';
+const VERSION = '1.13.0';
 // Promisified exec for shutdown operations
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Load configuration from TakaroConfig.txt
@@ -652,6 +652,10 @@ async function handleTakaroRequest(message) {
             // Return empty array for now
             responsePayload = [];
             break;
+        case 'listEntities':
+            // Astroneer doesn't support entity listing
+            responsePayload = [];
+            break;
         default:
             logger.warn(`Unknown action: ${action}`);
             responsePayload = { error: `Unknown action: ${action}` };
@@ -905,28 +909,6 @@ function connectToRcon() {
             logger.info(`Player left: ${player.name} (${player.guid})`);
             if (isConnectedToTakaro) {
                 sendGameEvent('player-disconnected', {
-                    player: {
-                        gameId: String(player.guid),
-                        name: String(player.name),
-                        platformId: `astroneer:${player.guid}`,
-                        steamId: String(player.guid)
-                    }
-                });
-            }
-        });
-        rconClient.on('newplayer', (player) => {
-            // Only process if player is in-game
-            if (!player || !player.inGame)
-                return;
-            // Validate in-game player data
-            if (!player.guid || !player.name) {
-                logger.warn(`New in-game player with invalid data: ${JSON.stringify(player)}`);
-                metrics.errors++;
-                return;
-            }
-            logger.info(`New player detected: ${player.name} (${player.guid})`);
-            if (isConnectedToTakaro) {
-                sendGameEvent('player-connected', {
                     player: {
                         gameId: String(player.guid),
                         name: String(player.name),

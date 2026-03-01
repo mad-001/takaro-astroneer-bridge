@@ -2,9 +2,9 @@
 
 Connects your Astroneer dedicated server to Takaro using RCON. **No mods required.**
 
-## 🎉 Latest Version: v1.11.7
+## 🎉 Latest Version: v1.13.0
 
-**Real-time player events working perfectly!** Discord notifications and all hooks trigger within 1 second of players joining/leaving.
+**Bug fixes:** Eliminated duplicate player-connected events and fixed `listEntities` error.
 
 ---
 
@@ -23,7 +23,7 @@ winget install OpenJS.NodeJS.LTS
 
 ### Step 2: Download the Bridge
 
-Go to [Releases](https://github.com/mad-001/takaro-astroneer-bridge/releases/latest) and download `takaro-astroneer-bridge-v1.11.7-windows.zip`
+Go to [Releases](https://github.com/mad-001/takaro-astroneer-bridge/releases/latest) and download the latest zip.
 
 Extract it anywhere on your PC.
 
