@@ -10,7 +10,7 @@ import { promisify } from 'util';
 import { client as AstroneerRcon } from 'astroneer-rcon-client';
 
 // Version
-const VERSION = '1.20.0';
+const VERSION = '1.21.0';
 
 // Promisified exec for shutdown operations
 const execPromise = promisify(exec);
@@ -541,9 +541,16 @@ async function handleTakaroRequest(message: any) {
               };
             } else {
               const result = await rconClient.sendRaw(command, true);
+              const resultStr = typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result);
+              let prettyResult: string;
+              try {
+                prettyResult = JSON.stringify(JSON.parse(resultStr), null, 2);
+              } catch {
+                prettyResult = resultStr;
+              }
               responsePayload = {
                 success: true,
-                rawResult: typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
+                rawResult: prettyResult
               };
             }
           } catch (error) {

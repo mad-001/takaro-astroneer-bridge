@@ -2,9 +2,9 @@
 
 Connects your Astroneer dedicated server to Takaro using RCON. **No mods required.**
 
-## 🎉 Latest Version: v1.20.0
+## 🎉 Latest Version: v1.21.0
 
-**Bug fix:** SaveGame and NewGame commands no longer return an error. Astroneer doesn't send a response for these commands — the bridge was timing out waiting for one.
+**Bug fix:** ListPlayers, ListGames, and other JSON commands now display formatted output again instead of a single unreadable line.
 
 ---
 

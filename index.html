@@ -184,21 +184,29 @@
         </div>
 
         <div class="info">
-            <strong>🚀 v1.20.0 - STABLE!</strong><br>
-            Fixed SaveGame and NewGame commands timing out instead of succeeding.
+            <strong>🚀 v1.21.0 - STABLE!</strong><br>
+            Fixed ListPlayers and other JSON commands showing as one unreadable line.
         </div>
 
         <h2>📥 Download</h2>
-        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.20.0" class="download-btn">
-            🌟 Download Latest Version (v1.20.0) 🌟
+        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.21.0" class="download-btn">
+            🌟 Download Latest Version (v1.21.0) 🌟
         </a>
         <p><small>Released: March 1, 2026 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
 
-        <h2>🆕 What's New in v1.20.0</h2>
+        <h2>🆕 What's New in v1.21.0</h2>
         <div class="info">
-            <h3>Bug Fix: SaveGame and NewGame commands returning error</h3>
-            <p>The Astroneer server does not send a response after SaveGame or NewGame commands. The bridge was waiting for a response that never arrived, causing a 15-second timeout followed by an error. These commands now resolve immediately and return success.</p>
+            <h3>Bug Fix: JSON command responses shown as one unreadable line</h3>
+            <p>The v1.19.0 plain-text fix caused JSON responses (like ListPlayers, ListGames, ServerStatistics) to be returned as raw compact strings. The bridge now re-parses and pretty-prints any JSON response automatically.</p>
         </div>
+
+        <h2>📜 Previous Updates</h2>
+        <details>
+            <summary><strong>v1.20.0 - Fix SaveGame/NewGame returning error</strong></summary>
+            <div class="info" style="margin-top: 15px;">
+                <p>Astroneer does not send a response after SaveGame or NewGame. The bridge was waiting 15 seconds then returning an error. These commands now resolve immediately.</p>
+            </div>
+        </details>
 
         <h2>📜 Previous Updates</h2>
         <details>

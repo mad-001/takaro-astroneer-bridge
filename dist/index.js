@@ -47,7 +47,7 @@ const util_1 = require("util");
 // @ts-ignore - No types available for astroneer-rcon-client
 const astroneer_rcon_client_1 = require("astroneer-rcon-client");
 // Version
-const VERSION = '1.20.0';
+const VERSION = '1.21.0';
 // Promisified exec for shutdown operations
 const execPromise = (0, util_1.promisify)(child_process_1.exec);
 // Load configuration from TakaroConfig.txt
@@ -519,9 +519,17 @@ async function handleTakaroRequest(message) {
                         }
                         else {
                             const result = await rconClient.sendRaw(command, true);
+                            const resultStr = typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result);
+                            let prettyResult;
+                            try {
+                                prettyResult = JSON.stringify(JSON.parse(resultStr), null, 2);
+                            }
+                            catch {
+                                prettyResult = resultStr;
+                            }
                             responsePayload = {
                                 success: true,
-                                rawResult: typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
+                                rawResult: prettyResult
                             };
                         }
                     }
