@@ -174,12 +174,13 @@
         </div>
 
         <div class="warning">
-            <strong>⚠️ IMPORTANT</strong><br>
-            Takaro is currently invite-only. To get access:
+            <strong>Register Your Astroneer Server in Takaro</strong>
             <ol>
-                <li>Go to <a href="https://takaro.io" target="_blank">Takaro.io</a> and complete the interest survey</li>
-                <li>Join the <a href="https://discord.gg/takaro" target="_blank">Takaro Discord server</a></li>
-                <li>Request an invite from the team</li>
+                <li>In the Takaro dashboard, click <strong>Create Game Server</strong>.</li>
+                <li>Name the server (this is just the display name in Takaro).</li>
+                <li>Choose <strong>Generic</strong> as the server type.</li>
+                <li>Save. Takaro generates an <strong>Identity Token</strong> and a <strong>Registration Token</strong>.</li>
+                <li>Copy the <strong>Registration Token</strong> — you'll paste it into the config file in Step 4.</li>
             </ol>
         </div>
 
@@ -193,180 +194,6 @@
             🌟 Download Latest Version (v1.22.0) 🌟
         </a>
         <p><small>Released: March 1, 2026 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
-
-        <h2>🆕 What's New in v1.22.0</h2>
-        <div class="info">
-            <h3>Feature: kick &lt;name&gt; command alias</h3>
-            <p>Astroneer RCON only supports <code>KickPlayerGuid</code>. Typing <code>kick Crash</code> would send an invalid command, causing a 15-second timeout and RCON reconnect. The bridge now intercepts <code>kick &lt;name&gt;</code>, looks up the player's GUID automatically, and sends the correct <code>KickPlayerGuid</code> command.</p>
-            <p>Example: <code>kick Crash</code> now works correctly.</p>
-        </div>
-
-        <h2>📜 Previous Updates</h2>
-        <details>
-            <summary><strong>v1.21.0 - Fix JSON commands showing as one line</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <p>The v1.19.0 plain-text fix caused JSON responses (ListPlayers, ListGames, ServerStatistics) to be returned as raw compact strings. The bridge now re-parses and pretty-prints any JSON response automatically.</p>
-            </div>
-        </details>
-        <details>
-            <summary><strong>v1.20.0 - Fix SaveGame/NewGame returning error</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <p>Astroneer does not send a response after SaveGame or NewGame. The bridge was waiting 15 seconds then returning an error. These commands now resolve immediately.</p>
-            </div>
-        </details>
-
-        <h2>📜 Previous Updates</h2>
-        <details>
-            <summary><strong>v1.19.0 - Fix RCON parse errors on plain-text responses</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <p>Commands like kick, ban, and unban return plain text from Astroneer. The bridge was trying to JSON-parse those responses, causing errors that triggered RCON reconnects and ghost clients firing duplicate events. Fixed by passing <code>notJson=true</code> to sendRaw for all direct commands.</p>
-            </div>
-        </details>
-        <details>
-            <summary><strong>v1.18.0 - Fix ghost RCON clients causing duplicate events</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <p>Every RCON error was creating a new client without disconnecting the old one. Multiple clients polling simultaneously doubled every player event. Fixed by calling <code>removeAllListeners()</code> and <code>disconnect()</code> on the old client before creating a new one.</p>
-            </div>
-        </details>
-        <details>
-            <summary><strong>v1.17.0 - Fix events blocked after game crash</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <h3>Bug Fix: Events blocked after game crash</h3>
-                <p>When a player's game crashed instead of cleanly disconnecting, the bridge was silently blocking their next connect event. This is now fixed — all connect and disconnect events fire correctly regardless of how a player leaves.</p>
-            </div>
-        </details>
-
-        <h2>📜 Previous Updates</h2>
-        <details>
-            <summary><strong>v1.16.0 - Remove initial player scan</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <p>Removed the initial player scan on RCON connect that was causing duplicate connected events every time the bridge restarted.</p>
-            </div>
-        </details>
-        <details>
-            <summary><strong>v1.13.0 - listEntities fix & newplayer dedup</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <p>Fixed <code>listEntities</code> error from Takaro. Removed redundant <code>newplayer</code> handler that was duplicating connect events.</p>
-            </div>
-        </details>
-        <details>
-            <summary><strong>v1.12.0 - Log rotation & deployment cleanup</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <p>Added log rotation (20-day retention), cleaned up server deployment scripts.</p>
-            </div>
-        </details>
-        <details>
-            <summary><strong>v1.11.9 - Code optimization & reliability</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <p>Player data validation, error tracking with metrics, max reconnect attempts, improved logging throughout.</p>
-            </div>
-        </details>
-        <details>
-            <summary><strong>v1.11.8 - Stable Release (superseded)</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <p>Added debug logging and confirmed all features working. Superseded by v1.11.9's reliability improvements.</p>
-            </div>
-        </details>
-        <details>
-            <summary><strong>v1.11.7 - Event Processing Fix</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <h3>Fixed Event Processing Hang</h3>
-                <p>Bridge now responds immediately to <code>getPlayerLocation</code> requests, allowing events to be created in the database.</p>
-            </div>
-        </details>
-        <div class="info">
-            <h3>Critical Fix - Event Processing No Longer Hangs</h3>
-            <p><strong>The Problem:</strong> Events were being sent correctly, but Takaro's request for <code>getPlayerLocation</code> was being queued instead of answered immediately. This caused event processing to hang indefinitely, preventing events from being created in the database.</p>
-
-            <p><strong>The Fix:</strong></p>
-            <ul>
-                <li>Bridge now responds immediately to <code>getPlayerLocation</code> requests</li>
-                <li>Returns dummy location <code>{ x: 0, y: 0, z: 0 }</code> to allow event processing to complete</li>
-                <li>Events are created in Takaro database within 1 second</li>
-                <li>Discord notifications and all hooks trigger properly</li>
-            </ul>
-
-            <p><strong>Result:</strong> Full real-time player event support is now working!</p>
-        </div>
-
-        <h2>📜 Previous Updates</h2>
-        <details>
-            <summary><strong>v1.11.5 - Event Format Fix</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <h3>Restored Working Event Format</h3>
-                <p>Events now use <code>type: 'gameEvent'</code> as expected by Takaro instead of incorrect <code>type: 'request'</code> format.</p>
-            </div>
-        </details>
-        <div class="info">
-            <h3>Critical Fix - Event Format Restored</h3>
-            <p><strong>The Problem:</strong> Events were being sent with the wrong format (<code>type: 'request'</code>) instead of the correct <code>type: 'gameEvent'</code> format. This caused Takaro to ignore all events, breaking Discord notifications and event-triggered hooks.</p>
-
-            <p><strong>The Fix:</strong></p>
-            <ul>
-                <li>Restored v1.11.1's working event format</li>
-                <li>Events now use <code>type: 'gameEvent'</code> as expected by Takaro</li>
-                <li>Discord notifications work again</li>
-                <li>All hooks and modules triggered by player events now function correctly</li>
-            </ul>
-
-            <p><strong>Combined with v1.11.4:</strong> Shutdown commands work reliably AND events trigger properly!</p>
-        </div>
-
-        <h2>📜 Previous Updates</h2>
-        <details>
-            <summary><strong>v1.11.4 - Shutdown Command Fix</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <h3>Fixed Shutdown Breaking Bridge</h3>
-                <p>Server shutdown commands no longer break the bridge. Shutdown executes asynchronously and RCON auto-reconnects.</p>
-            </div>
-        </details>
-        <details>
-            <summary><strong>v1.11.0-v1.11.3 - Click to expand</strong></summary>
-        <div class="info">
-            <h3>Critical Bug Fix - Shutdown Command No Longer Breaks Bridge</h3>
-            <p><strong>The Problem:</strong> In v1.11.2-v1.11.3, server shutdown commands would wait for RCON response, but the server would disconnect before responding. This caused errors that broke all subsequent bridge operations including player events.</p>
-
-            <p><strong>The Fix:</strong></p>
-            <ul>
-                <li>Shutdown commands now respond immediately to Takaro</li>
-                <li>Server shutdown executes asynchronously without blocking</li>
-                <li>RCON auto-reconnects when server comes back online</li>
-                <li>Player connect/disconnect events work reliably again</li>
-            </ul>
-
-            <p><strong>Recommendation:</strong> If you're on v1.11.2 or v1.11.3, update immediately to restore full functionality.</p>
-        </div>
-
-        <h2>📜 Previous Updates</h2>
-        <details>
-            <summary><strong>v1.11.0-v1.11.3 - Click to expand</strong></summary>
-            <div class="info" style="margin-top: 15px;">
-                <h3>v1.11.0 - Player Events Fixed</h3>
-                <p>Player connect/disconnect events now work instantly via WebSocket! Critical bugs fixed for real-time event delivery.</p>
-            </div>
-        </details>
-
-        <h2>🔧 Technical Details (v1.11.0)</h2>
-        <div class="info">
-            <h3>Critical Bug Fixes - Events Now Work Instantly!</h3>
-            <p><strong>The Problem:</strong> Events were being sent but silently dropped by Takaro due to two critical bugs:</p>
-
-            <p><strong>Bug Fix #1 - Null Values in Optional Fields:</strong></p>
-            <p>The bridge was sending <code>null</code> for optional fields like <code>epicOnlineServicesId</code> and <code>ip</code>. Takaro's strict validation rejects null values - optional fields must be completely omitted instead.</p>
-
-            <p><strong>Bug Fix #2 - getPlayerLocation Hanging:</strong></p>
-            <p>During event processing, Takaro requests player location. The bridge was queuing this request without responding, causing event processing to hang indefinitely.</p>
-
-            <p><strong>The Result:</strong></p>
-            <ol>
-                <li>✅ Events delivered via WebSocket <code>gameEvent</code> messages (no module needed!)</li>
-                <li>✅ Instant event delivery (< 1 second latency)</li>
-                <li>✅ 100% reliability - events always created</li>
-                <li>✅ Hooks and Discord notifications work immediately</li>
-                <li>✅ Simpler architecture - just the bridge, no Takaro module required</li>
-            </ol>
-
-        </div>
 
         <h2>⚡ Quick Start</h2>
         <ol>
@@ -463,7 +290,7 @@ RCON> exit                    # Close console</code></pre>
             <li><a href="https://github.com/mad-001/takaro-astroneer-bridge/blob/master/References.md" target="_blank">📚 References & Documentation</a> - API docs, working examples, and technical insights</li>
             <li><a href="https://api.takaro.io/api.html" target="_blank">🔧 Takaro API Reference</a></li>
             <li><a href="https://docs.takaro.io/" target="_blank">📖 Takaro Documentation</a></li>
-            <li><a href="https://takaro.io" target="_blank">🌐 Takaro Platform</a></li>
+            <li><a href="https://takaro.io/?via=zach550" target="_blank">🌐 Takaro Platform</a></li>
             <li><a href="https://discord.gg/takaro" target="_blank">💬 Discord Community</a></li>
         </ul>
 
