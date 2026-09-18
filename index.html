@@ -78,7 +78,7 @@
         </div>
 
         <div class="info">
-            <strong>🚀 v1.22.0 - STABLE!</strong><br>
+            <strong>🚀 <span data-latest-version>Latest</span> - STABLE!</strong><br>
             Added <code>kick &lt;name&gt;</code> support. You can now kick players by name instead of GUID.
         </div>
 
@@ -86,10 +86,10 @@
         <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/latest" class="download-btn">Download Latest Release</a>
 
         <h2 id="sec1">📥 Download</h2>
-        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/tag/v1.22.0" class="download-btn">
-            🌟 Download Latest Version (v1.22.0) 🌟
+        <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases/latest" class="download-btn">
+            🌟 Download Latest Version (<span data-latest-version>latest</span>) 🌟
         </a>
-        <p><small>Released: March 1, 2026 | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
+        <p><small>Released: <span data-latest-date>see release page</span> | <a href="https://github.com/mad-001/takaro-astroneer-bridge/releases">View All Releases</a></small></p>
 
         <h2 id="sec2">⚡ Quick Start</h2>
         <ol>
@@ -206,5 +206,19 @@ RCON> exit                    # Close console</code></pre>
             <a href="#sec7">Resources</a>
         </nav>
     </div>
+<script>
+    // Fill in the latest release tag/date so this page never goes stale.
+    fetch('https://api.github.com/repos/mad-001/takaro-astroneer-bridge/releases/latest')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (rel) {
+            if (!rel || !rel.tag_name) return;
+            document.querySelectorAll('[data-latest-version]').forEach(function (el) { el.textContent = rel.tag_name; });
+            if (rel.published_at) {
+                var d = new Date(rel.published_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                document.querySelectorAll('[data-latest-date]').forEach(function (el) { el.textContent = d; });
+            }
+        })
+        .catch(function () {});
+    </script>
 </body>
 </html>
